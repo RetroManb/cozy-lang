@@ -1,4 +1,4 @@
-# Cozy
+# Cozy Programming Language
 
 **Cozy** (`.cozy`, `.cz`) is like the weird lovechild of [Catspeak](https://github.com/katsaii/catspeak-lang) (by [@katsaii](https://github.com/katsaii)), Lua, C#, Java, Javascript, Python, and probably some more languages. Cozy is meant to be a GameMaker library where you can write external scripts to be compiled and ran later inside GameMaker games.
 
