@@ -1,0 +1,28 @@
+import cozy.std;
+import cozy.array;
+
+func sum(params args) {
+	
+	local sum = 0;
+	print(sum);
+	
+	for (local i = 0; i < array.Length(args); i += 1)
+	{
+		sum += args[i];
+	}
+	
+	return sum;
+}
+func product(params args) {
+	
+	local product = 1;
+	
+	for (local i = 0; i < array.Length(args); i += 1)
+	{
+		product *= args[i];
+	}
+	
+	return product;
+}
+
+print("5 * 9 =",product(5,9));

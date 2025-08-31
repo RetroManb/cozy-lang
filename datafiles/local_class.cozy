@@ -1,0 +1,11 @@
+import cozy.std;
+
+local class MyClass {
+	
+}
+
+print(MyClass);
+
+local obj = new MyClass;
+
+print(obj);

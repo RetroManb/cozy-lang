@@ -1,0 +1,9 @@
+
+import cozy.std;
+
+local MyFunction = func(params args) {
+	print(args);
+};
+
+MyFunction(2,5,1,9,2);
+

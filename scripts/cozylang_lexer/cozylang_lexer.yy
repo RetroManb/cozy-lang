@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"cozylang_lexer",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"cozylang_lexer",
+  "parent":{
+    "name":"CozyLang",
+    "path":"folders/CozyLang.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

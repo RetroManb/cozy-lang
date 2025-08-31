@@ -1,0 +1,16 @@
+import cozy.std;
+
+const class !StrictClass {
+	property Test;
+		/// without this, this will error with "Property Test does not exist in object"
+		/// removing the ! at the start of the class declaration will turn this behavior off
+
+	constructor {
+		this.Test = true;
+	}
+}
+
+local obj = new StrictClass;
+
+print(obj == obj);
+print(obj is obj);

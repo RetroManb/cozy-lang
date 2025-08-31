@@ -1,0 +1,26 @@
+import cozy.std;
+
+final class !Singleton {
+	static property Instance {
+		{
+			return rawget(Singleton,"Instance");
+		}
+		value {
+			if (Singleton.Instance instanceof Singleton) {
+				throw("Singleton already instantiated");
+			}
+			
+			rawset(Singleton,"Instance",value);
+		}
+	}
+	
+	property Watermelon = 5;
+	
+	constructor {
+		Singleton.Instance = this;
+	}
+}
+
+print(Singleton.Instance);
+new Singleton();
+print(Singleton.Instance);

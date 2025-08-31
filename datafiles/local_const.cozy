@@ -1,0 +1,68 @@
+import cozy.std;
+
+
+local const LOCAL_CONST_VAR = "Hey";
+
+print(LOCAL_CONST_VAR);
+
+if (true)
+{
+	local const LOCAL_CONST_VAR2 = "Hello";
+	
+	print(LOCAL_CONST_VAR2);
+}
+
+print(LOCAL_CONST_VAR2);
+
+
+/*
+local const func LOCAL_CONST_FUNC {
+	print("Hey from LOCAL_CONST_FUNC");
+	return "Hey";
+};
+
+print(LOCAL_CONST_FUNC);
+print(LOCAL_CONST_FUNC());
+
+if (true)
+{
+	local const func LOCAL_CONST_FUNC2 {
+		print("Hello from LOCAL_CONST_FUNC2");
+		return "Hello";
+	};
+	
+	print(LOCAL_CONST_FUNC2);
+	print(LOCAL_CONST_FUNC2());
+}
+
+print(LOCAL_CONST_FUNC2);
+print(LOCAL_CONST_FUNC2());
+*/
+
+/*local const class LOCAL_CONST_CLASS {
+	property Hey;
+	
+	constructor {
+		this.Hey = "Hey from LOCAL_CONST_CLASS";
+	}
+}
+
+print(LOCAL_CONST_CLASS);
+print((new LOCAL_CONST_CLASS).Hey);
+
+if (true)
+{
+	local const class LOCAL_CONST_CLASS2 {
+		property Hello;
+		
+		constructor {
+			this.Hello = "Hello from LOCAL_CONST_CLASS2";
+		}
+	}
+	
+	print(LOCAL_CONST_CLASS2);
+	print((new LOCAL_CONST_CLASS2).Hello);
+}
+	
+print(LOCAL_CONST_CLASS2);
+print((new LOCAL_CONST_CLASS2).Hello);*/

@@ -1,0 +1,9 @@
+import cozy.std;
+import gml.random;
+
+random.Randomize();
+
+for (local i = 0; i < 200; i += 1)
+{
+	print(random.IntRange(1,100));
+}

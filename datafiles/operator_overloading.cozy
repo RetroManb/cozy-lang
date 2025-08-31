@@ -1,0 +1,107 @@
+import cozy.std;
+import cozy.math;
+import cozy.types;
+import cozy.string;
+
+const final class !Real {
+	property value = 0;
+	property value {
+		{
+			return rawget(this,"value");
+		}
+		value {
+			rawset(this,"value",math.ToReal(value));
+		}
+	}
+	
+	constructor(value) {
+		this.value = value;
+	}
+	
+	static func ToString {
+		return "Real(" + string.ToString(this.value) + ")";
+	}
+	
+	/// infix ==
+	/// 	x == y
+	operator infix ==(rhs) {
+		local other;
+		if (rhs instanceof Real) {
+			other = rhs.value;
+		}
+		else if (types.IsReal(rhs)) {
+			other = rhs;
+		}
+		print("Hey");
+		return this.value == other;
+	}
+	
+	/// infix +
+	/// 	x + y
+	operator infix +(rhs) {
+		local other;
+		if (rhs instanceof Real) {
+			other = rhs.value;
+		}
+		else if (types.IsReal(rhs)) {
+			other = rhs;
+		}
+			
+		return new Real(this.value + other);
+	}
+	
+	/// infix -
+	/// 	x - y
+	operator infix -(rhs) {
+		local other;
+		if (rhs instanceof Real) {
+			other = rhs.value;
+		}
+		else if (types.IsReal(rhs)) {
+			other = rhs;
+		}
+			
+		return new Real(this.value - other);
+	}
+	
+	/// prefix -
+	/// 	-x
+	/// the less than sign denotes that this will be a prefix operator, a greater than sign
+	/// would've denoted a postfix operator
+	operator prefix -() {
+		return new Real(-this.value);
+	}
+	
+	/// prefix +
+	/// 	+x
+	operator prefix +() {
+		return new Real(+this.value);
+	}
+	
+	/*
+	/// this wont work, delete is not a valid overloadable operator
+	
+	/// prefix delete
+	/// 	delete x
+	operator prefix delete() {
+	
+	}
+	
+	/// same with this
+	
+	/// prefix classof
+	/// 	classof x
+	operator prefix classof() {
+	
+	}
+	
+	*/
+}
+
+local real1 = new Real(3);
+local real2 = new Real(5);
+
+print(real1);
+print(real2);
+print(real1 + real2);
+

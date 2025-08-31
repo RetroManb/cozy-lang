@@ -1,0 +1,28 @@
+import cozy.std;
+
+/// const variable
+const TEXT = "Hello, World!";
+
+print(TEXT);
+
+/// const func
+
+const func Hey() {
+	print("Hello, World!");
+}
+
+Hey();
+
+/// local const
+
+/*local const POOP_TEXT = "Poop";
+
+print(POOP_TEXT);*/
+
+
+/// local const func
+/*
+local const func Pooper() {
+	print("Poop!");
+}
+*/

@@ -1,0 +1,164 @@
+/// ideas
+
+//// halt statement
+```
+halt;
+```
+This would just be compiled to a HALT instruction.
+
+//// if expression
+```
+if (<ifexpr>) (<trueexpr>) else (<falseexpr>)
+```
+This would essentially be `<ifexpr> ? <trueexpr> : <falseexpr>`.
+
+//// foreach statement
+```
+foreach (<identifier> : <expression>)
+{
+	<statement>
+	...
+}
+```
+
+/// module structure
+
+cozy {
+    std {
+        - stdout {
+            - Flush() -> Undefined
+            - Write(text: String) -> Undefined
+            - WriteLn(text: String) -> Undefined
+        }
+        - stderr {
+            - Flush() -> Undefined
+            - Write(text: String) -> Undefined
+            - WriteLn(text: String) -> Undefined
+        }
+        - assert(v: Any, exception: Any) -> Undefined
+        - print(...: Any) -> Undefined
+        - throw(exception: Any) -> Undefined
+        - rawget(object: Struct OR Struct.CozyObject, name: String) -> Any
+        - rawset(object: Struct OR Struct.CozyObject, name: String, value: Any) -> Undefined
+    }
+    math {
+        - math {
+            - Abs(x: Real) -> Real
+            - Acos(x: Real) -> Real
+            - Asin(x: Real) -> Real
+            - Atan(x: Real) -> Real
+            - Atan2(y: Real, x: Real) -> Real
+            - DegAcos(x: Real) -> Real
+            - DegAsin(x: Real) -> Real
+            - DegAtan(x: Real) -> Real
+            - DegAtan2(y: Real, x: Real) -> Real
+            - Ceil(x: Real) -> Real
+            - Cos(x: Real) -> Real
+            - DegCos(x: Real) -> Real
+            - RadToDeg(x: Real) -> Real
+            - Exp(x: Real) -> Real
+			- Fact(x: Real) -> Real
+            - Floor(x: Real) -> Real
+            - Round(x: Real) -> Real
+            - LogN(x: Real, base: Real) -> Real
+            - Log2(x: Real) -> Real
+            - Log10(x: Real) -> Real
+            - Max(...: Real) -> Real
+            - Min(...: Real) -> Real
+            - Frac(x: Real) -> Real
+            - DegToRad(x: Real) -> Real
+            - Sin(x: Real) -> Real
+            - Sign(x: Real) -> Real
+            - DegSin(x: Real) -> Real
+            - Sqrt(x: Real) -> Real
+            - Tan(x: Real) -> Real
+            - DegTan(x: Real) -> Real
+            - ToReal(value: Any) -> Real
+            - TryReal(value: Any, [def: Any]) -> Real OR Any
+			- Distance(x1: Real, y1: Real, x2: Real, y2: Real) -> Real
+			- Distance3D(x1: Real, y1: Real, z1: Real, x2: Real, y2: Real, z2: Real) -> Real
+			- Direction(x1: Real, y1: Real, x2: Real, y2: Real) -> Real
+            - pi: Real
+        }
+    }
+    string {
+        - string {
+            - Char(...: Real) -> String
+            - IsEmpty(str: String) -> Bool
+            - Length(str: String) -> Real
+            - Lower(str: String) -> String
+            - Ord(str: Real) -> ...Real
+            - Reverse(str: String) -> String
+            - Split(str: String, delim: String, [maxSplit: Real]) -> Array<String>
+            - ToString(value: Any) -> String
+            - Upper(str: String) -> String
+        }
+    }
+	array {
+		- array {
+			- New(len: Real, [value: Any]) -> Array<Any>
+			- HasValue(array: Array<Any>, value: Any) -> Bool
+			- InRange(array: Array<Any>, index: Real) -> Bool
+			- Length(array: Array<Any>) -> Real
+			- Resize(array: Array<Any>, newSize: Real) -> Undefined
+			- Clear(array: Array<Any>) -> Undefined
+			- Reverse(array: Array<Any>) -> Undefined
+			- Copy(array: Array<Any>) -> Array<Any>
+			- GetIndex(array: Array<Any>, value: Any) -> Real OR Undefined
+			- Pack(...: Any) -> Array<Any>
+			- Unpack(array: Array<Any>) -> ...Any
+			- Push(array: Array<Any>,...: Any) -> Undefined
+			- Pop(array: Array<Any>) -> Any
+			- First(array: Array<Any>) -> Any
+			- Last(array: Array<Any>) -> Any
+			- Insert(array: Array<Any>, index: Real, ...: Any) -> Undefined
+			- Remove(array: Array<Any>, index: Real, count: Real) -> Undefined
+			- IsEmpty(array: Array<Any>) -> Bool
+		}
+	}
+	types {
+		- types {
+			- IsUndefined(value: Any) -> Bool
+			- IsNumeric(value: Any) -> Bool
+			- IsReal(value: Any) -> Bool
+			- IsInt32(value: Any) -> Bool
+			- IsInt64(value: Any) -> Bool
+			- IsInfinity(value: Any) -> Bool
+			- IsBool(value: Any) -> Bool
+			- IsString(value: Any) -> Bool
+			- IsArray(value: Any) -> Bool
+			- IsStruct(value: Any) -> Bool
+			- IsObject(value: Any) -> Bool
+			- IsClass(value: Any) -> Bool
+			- IsHandle(value: Any) -> Bool
+			- IsCallable(value: Any) -> Bool
+		}
+	}
+}
+gml {
+	random {
+        - random {
+            - Int(x: Real) -> Real
+            - IntRange(min: Real, max: Real) -> Real
+            - Float(x: Real) -> Real
+            - FloatRange(min: Real, max: Real) -> Real
+            - Pick(...: Any) -> Any
+            - PickArray(array: Array<Any>, [index: Real], [count: Real]) -> Any
+            - PickString(str: String, [index: Real], [count: Real]) -> String
+            - GetSeed() -> Real
+            - SetSeed(seed: Real) -> Undefined
+            - Randomize() -> Undefined
+        }
+    }
+	draw {
+		- draw {
+			- SetColor(color: Constant.Color) -> Undefined
+			- GetColor() -> Constant.Color
+			- Text(x: Real, y: Real, text: Any) -> Undefined
+			- Rectangle(x1: Real, y1: Real, x2: Real, y2: Real, outline: Bool) -> Undefined
+			- Circle(x: Real, y: Real, radius: Real, outline: Bool) -> Undefined
+			- Ellipse(x1: Real, y1: Real, x2: Real, y2: Real, outline: Bool) -> Undefined
+			- Triangle(x1: Real, y1: Real, x2: Real, y2: Real, x3: Real, y3: Real, outline: Bool) -> Undefined
+		}
+	}
+}

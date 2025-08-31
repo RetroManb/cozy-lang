@@ -1,0 +1,6 @@
+import cozy.std;
+
+if (true) {}
+else {
+	print("Hey");
+}

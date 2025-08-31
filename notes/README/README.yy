@@ -1,0 +1,11 @@
+{
+  "$GMNotes":"",
+  "%Name":"README",
+  "name":"README",
+  "parent":{
+    "name":"CozyLang",
+    "path":"folders/CozyLang.yy",
+  },
+  "resourceType":"GMNotes",
+  "resourceVersion":"2.0",
+}

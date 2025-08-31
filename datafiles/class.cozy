@@ -1,0 +1,76 @@
+import cozy.std;
+
+class TestParent {
+	property parentProperty;
+}
+
+class MyClass : TestParent {
+	property _hello;
+	
+	property Hello {
+		{
+			return this._hello;
+		}
+		value {
+			this._hello = value;
+		}
+	}
+	
+	/// fallback property
+	/// 	only used when trying to get or set a variable that is not in the object
+	/*
+	property @ {
+		name {
+			return this._hello;
+		}
+		name,value {
+			print(name,value);
+			this._hello = value;
+		}
+	}
+	*/
+	
+	/*
+	/// numeric index property
+	/// 	only used when trying to get or set a numeric index
+	
+	/// example
+	property # {
+		index {
+			return this.array[index];
+		}
+		index,value {
+			this.array[index] = value;
+		}
+	}
+	*/
+	
+	constructor() {
+		this._hello = "World";
+	}
+	/// this is ONLY called when the ` delete ` keyword is used, not on garbage collection, be weary...
+	destructor {
+		print("Bye bye!");
+	}
+	
+	func MyFunc() {
+		print(this);
+	}
+	
+	
+	
+}
+
+class TestChild {
+	property childProperty;
+}
+
+local obj = new MyClass();
+
+print(classof obj);
+print(obj.Hello);
+print(obj._hello);
+print(obj.blue);
+
+delete obj;
+

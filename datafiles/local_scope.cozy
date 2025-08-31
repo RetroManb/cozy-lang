@@ -1,0 +1,71 @@
+import cozy.std;
+
+local a = 2;
+local b = 5;
+
+if (b == 5)
+{
+	local d = 5 * b;
+	if (d == 25)
+	{
+		local j = d*d;
+		
+		print(j);
+	}
+	
+	print(d);
+}
+
+/*for (local i = 0; i < 5; i += 1)
+{
+	local c = i * b;
+	print("loop:",c);
+	
+	for (local j = 0; j < 2; j += 1)
+	{
+		local d = j*c;
+		print("loop2",d);
+	}
+}*/
+
+/*local i = 0;
+while (i < 5)
+{
+	local c = i * b;
+	print("loop:",c);
+	
+	for (local j = 0; j < 2; j += 1)
+	{
+		local d = j*c;
+		print("loop2",d);
+	}
+	
+	i += 1;
+}*/
+
+/*for (local i = 0; i < 10; i += 1)
+{
+	local c = i * b;
+	print("loop:",c);
+}*/
+
+/*local i = 0;
+do {
+	local c = i * b;
+	print("loop:",c);
+	
+	for (local j = 0; j < 2; j += 1)
+	{
+		local d = j*c;
+		print("loop2",d);
+	}
+	
+	i += 1;
+	
+} while (i < 10);*/
+
+print("a:",a);
+print("b:",b);
+print("c:",c);
+print("d:",d);
+print("j:",j);

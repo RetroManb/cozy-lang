@@ -1,0 +1,11 @@
+{
+  "$GMNotes":"",
+  "%Name":"DevNotes",
+  "name":"DevNotes",
+  "parent":{
+    "name":"CozyLang",
+    "path":"folders/CozyLang.yy",
+  },
+  "resourceType":"GMNotes",
+  "resourceVersion":"2.0",
+}

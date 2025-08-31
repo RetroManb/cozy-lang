@@ -1,0 +1,21 @@
+import cozy.std;
+
+#define FUNC (func {\
+	print("Hello, World!");\
+})
+#define HELLO "Hello, World!"
+
+FUNC();
+print(HELLO);
+
+/*
+
+/// this evaluates to:
+
+(func {
+	print("Hello, World!");
+})();
+
+print("Hello, World!");
+
+*/

@@ -1,0 +1,11 @@
+
+import cozy.std;
+import cozy.array;
+
+const func MyFunction(params args) {
+	print(array.Unpack(args));
+};
+
+MyFunction(2,5,1,9,2);
+MyFunction(2,5,1,9,2);
+

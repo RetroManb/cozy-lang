@@ -1,0 +1,8 @@
+import cozy.std;
+
+local value = if (true) 
+	(0) else
+	(1);
+
+print(value);
+

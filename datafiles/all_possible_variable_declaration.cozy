@@ -1,0 +1,87 @@
+/// global
+<identifier> = <expression>;
+
+func <identifier>(<args>) {<body>
+
+class <identifier> (: <identifier>)?
+{
+}
+
+/// local
+local <identifier> = <expression>;
+
+local func <identifier>(<args>) {<body>
+
+local class <identifier> (: <identifier>)?
+{
+}
+
+/// const
+const <identifier> = <expression>;
+
+const func <identifier>(<args>) {<body>
+
+const class <identifier> (: <identifier>)?
+{
+}
+
+/// local const
+local const <identifier> = <expression>;
+
+local const func <identifier>(<args>) {<body>
+
+local const class <identifier> (: <identifier>)?
+{
+	<classStatement>
+	...
+}
+
+
+
+/// global
+variable = "Hello";
+
+func name(a,b,c) {
+	
+}
+
+class name
+{
+	
+}
+
+/// local
+local variable = "Hello";
+
+local func name(a,b,c) {
+	
+}
+
+local class name
+{
+	
+}
+
+/// const
+const variable = "Hello";
+
+const func name(a,b,c) {
+	
+}
+
+const class name
+{
+	
+}
+
+/// local const
+local const variable = "Hello";
+
+local const func name(a,b,c) {
+	
+}
+
+local const class name
+{
+	
+}

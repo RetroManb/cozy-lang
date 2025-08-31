@@ -1,0 +1,129 @@
+import cozy.std;
+import cozy.math;
+import cozy.types;
+import cozy.string;
+
+const final class !Vec2 {
+	property X = 0;
+	property Y = 0;
+	property X {
+		{
+			return rawget(this,"X");
+		}
+		value {
+			if (!types.IsNumeric(value)) {
+				value = 0;
+			}
+			rawset(this,"X",value);
+		}
+	}
+	property Y {
+		{
+			return rawget(this,"Y");
+		}
+		value {
+			if (!types.IsNumeric(value)) {
+				value = 0;
+			}
+			rawset(this,"Y",value);
+		}
+	}
+	
+	static func Zero {
+		return new Vec2(0,0);
+	}
+	static func XAxis {
+		return new Vec2(1,0);
+	}
+	static func YAxis {
+		return new Vec2(0,1);
+	}
+	static func One {
+		return new Vec2(1,1);
+	}
+	static func New(params args) {
+		return new Vec2(args[0],args[1]);
+	}
+	
+	constructor(x,y) {
+		this.X = x;
+		this.Y = y;
+	}
+	
+	static func ToString {
+		return "Vec2("+string.ToString(this.X)+","+string.ToString(this.Y)+")";
+	}
+	
+	property Length {
+		{
+			return math.Distance(0,0,this.X,this.Y);
+		}
+	}
+	property Angle {
+		{
+			return math.Direction(0,0,this.X,this.Y);
+		}
+	}
+	
+	operator infix ==(rhs) {
+		if (!(rhs instanceof Vec2))
+		{
+			return false;
+		}
+		
+		return this.X == rhs.X && this.Y == rhs.Y;
+	}
+	operator infix +(rhs) {
+		if (!(rhs instanceof Vec2))
+		{
+			throw("Invalid + operation on Vec2");
+		}
+		
+		return new Vec2(this.X+rhs.X,this.Y+rhs.Y);
+	}
+	operator infix -(rhs) {
+		if (!(rhs instanceof Vec2))
+		{
+			throw("Invalid + operation on Vec2");
+		}
+		
+		return new Vec2(this.X-rhs.X,this.Y-rhs.Y);
+	}
+	operator infix *(rhs) {
+		if (!(rhs instanceof Vec2))
+		{
+			throw("Invalid + operation on Vec2");
+		}
+		
+		return new Vec2(this.X*rhs.X,this.Y*rhs.Y);
+	}
+	operator infix /(rhs) {
+		if (!(rhs instanceof Vec2))
+		{
+			throw("Invalid + operation on Vec2");
+		}
+		
+		return new Vec2(this.X/rhs.X,this.Y/rhs.Y);
+	}
+	operator infix **(rhs) {
+		if (!(rhs instanceof Vec2))
+		{
+			throw("Invalid + operation on Vec2");
+		}
+		
+		return new Vec2(this.X**rhs.X,this.Y**rhs.Y);
+	}
+	operator infix //(rhs) {
+		if (!(rhs instanceof Vec2))
+		{
+			throw("Invalid + operation on Vec2");
+		}
+		
+		return new Vec2(this.X//rhs.X,this.Y//rhs.Y);
+	}
+}
+
+local vec = new Vec2(0,0);
+print(vec);
+
+print(vec + Vec2.New(5,7));
