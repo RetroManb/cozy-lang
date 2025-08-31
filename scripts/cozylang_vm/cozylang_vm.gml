@@ -1336,7 +1336,7 @@ function CozyState(env) constructor {
 					
 					var prevLocals = self.removeAllLocals();
 					
-					library.applyToState(self);
+					library.applyToState(self,self.env.flags.importSubLibraries);
 					
 					self.restoreAllLocals(prevLocals);
 					

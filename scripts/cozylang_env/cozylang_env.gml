@@ -34,13 +34,13 @@ function CozyLibrary(name,bytecode) constructor {
 	
 	/// @param {Struct.CozyState} state
 	/// @param {Bool} applyChildren
-	static applyToState = function(state,applyChildren=true) {
+	static applyToState = function(state,applyChildren) {
 		// apply children first
 		if (applyChildren)
 		{
 			var childNames = struct_get_names(self.children);
 			for (var i = 0, n = array_length(childNames); i < n; i++)
-				self.children[$ childNames[i]].applyToState(state);
+				self.children[$ childNames[i]].applyToState(state,true);
 		}
 		
 		// apply 
@@ -235,10 +235,13 @@ function CozyEnvironmentFlags() constructor {
 		/// Use __CozyGet and __CozySet methods on structs when getting/setting a
 		/// variable from a struct?
 	self.structGetterSetters = true;
+	
+		/// Import a libraries sub-libraries on import?
+	self.importSubLibraries = true;
 }
 
 function CozyEnvironment() constructor {
-	self.flags = new CozyEnvironmentFlags();
+	self.flags = global.cozylang.envFlags;
 	
 	/// @param {String} name
 	/// @param {String} codeString
