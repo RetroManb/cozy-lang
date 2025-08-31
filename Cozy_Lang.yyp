@@ -61,7 +61,6 @@
     {"id":{"name":"fnt_code_italic","path":"fonts/fnt_code_italic/fnt_code_italic.yy",},},
     {"id":{"name":"fnt_code","path":"fonts/fnt_code/fnt_code.yy",},},
     {"id":{"name":"DevNotes","path":"notes/DevNotes/DevNotes.yy",},},
-    {"id":{"name":"README","path":"notes/README/README.yy",},},
     {"id":{"name":"obj_cozytest","path":"objects/obj_cozytest/obj_cozytest.yy",},},
     {"id":{"name":"obj_ui_btn_check","path":"objects/obj_ui_btn_check/obj_ui_btn_check.yy",},},
     {"id":{"name":"obj_ui_btn","path":"objects/obj_ui_btn/obj_ui_btn.yy",},},

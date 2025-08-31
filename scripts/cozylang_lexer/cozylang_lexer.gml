@@ -135,7 +135,6 @@ function CozyLexer(env) constructor {
 		"goto" : COZY_TOKEN.GOTO,
 		"do" : COZY_TOKEN.DO,
 		"class" : COZY_TOKEN.CLASS,
-		"property" : COZY_TOKEN.PROPERTY,
 		"constructor" : COZY_TOKEN.CONSTRUCTOR,
 		"destructor" : COZY_TOKEN.DESTRUCTOR,
 		"new" : COZY_TOKEN.NEW,
