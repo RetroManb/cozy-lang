@@ -52,7 +52,8 @@ enum COZY_NODE {
 	MODIFIER = 49,
 	CLASS_OPERATOR = 51,
 	IMPORTONLY = 52,
-	__SIZE__ = 53,
+	IF_EXPRESSION = 53,
+	__SIZE__ = 54,
 }
 
 function CozyNode(type,value=undefined) constructor {
@@ -1758,6 +1759,9 @@ function CozyParser(env) constructor {
 			case COZY_TOKEN.NEW:
 				lhs = self.parseNew(lexer);
 				break;
+			case COZY_TOKEN.IF:
+				lhs = self.parseIfExpression(lexer);
+				break;
 		}
 		
 		var parsingExpression = true;
@@ -1906,6 +1910,30 @@ function CozyParser(env) constructor {
 		}
 		
 		return lhs;
+	}
+	
+	/// @param {Struct.CozyLexer} lexer
+	/// @returns {Struct.CozyNode}
+	static parseIfExpression = function(lexer) {
+		var ifExprNode = new CozyNode(
+			COZY_NODE.IF_EXPRESSION,
+			undefined
+		);
+		
+		var exprNode = self.parseExpression(lexer,-infinity,true);
+		var trueNode = self.parseExpression(lexer,-infinity,true);
+		
+		var elseNode = lexer.next();
+		if (elseNode.type != COZY_TOKEN.ELSE)
+			throw $"Malformed if expression";
+		
+		var falseNode = self.parseExpression(lexer,-infinity,true);
+		
+		ifExprNode.addChild(exprNode);
+		ifExprNode.addChild(trueNode);
+		ifExprNode.addChild(falseNode);
+		
+		return ifExprNode;
 	}
 	
 	/// @param {Struct.CozyLexer} lexer

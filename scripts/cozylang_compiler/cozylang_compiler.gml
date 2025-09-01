@@ -3108,7 +3108,47 @@ function CozyCompiler(env) constructor {
 			case COZY_NODE.NEW_OBJECT:
 				self.compileNew(expressionNode,bytecode,callReturnCount);
 				break;
+			case COZY_NODE.IF_EXPRESSION:
+				self.compileIfExpression(expressionNode,bytecode);
+				break;
 		}
+	}
+	
+	/// @param {Struct.CozyNode} ifExprNode
+	/// @param {Struct.CozyBytecode} bytecode
+	static compileIfExpression = function(ifExprNode,bytecode) {
+		var expressionNode = ifExprNode.children[0];
+		var trueNode = ifExprNode.children[1];
+		var falseNode = ifExprNode.children[2];
+		
+		var notNode = new CozyNode(
+			COZY_NODE.PRE_OPERATOR,
+			"?"
+		);
+		notNode.addChild(expressionNode);
+		
+		show_debug_message(notNode);
+		show_debug_message(trueNode);
+		show_debug_message(falseNode);
+		
+		self.compileExpression(notNode,bytecode);
+		
+		bytecode.push(COZY_INSTR.JUMP_IF_FALSE);
+		var falseJumpAddrOffset = bytecode.length();
+		bytecode.push(undefined);
+		
+		self.compileExpression(trueNode,bytecode);
+		bytecode.push(COZY_INSTR.JUMP);
+		var endJumpAddrOffset = bytecode.length();
+		bytecode.push(undefined);
+		
+		var falseOffset = bytecode.length();
+		self.compileExpression(falseNode,bytecode);
+		
+		var endOffset = bytecode.length();
+		
+		bytecode.set(falseJumpAddrOffset,falseOffset);
+		bytecode.set(endJumpAddrOffset,endOffset);
 	}
 	
 	/// @param {Struct.CozyNode} newNode

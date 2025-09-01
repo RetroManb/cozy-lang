@@ -60,7 +60,13 @@ if (cozylang_is_callable(fn))
 			}
 			break;
 		case COZYTEST_VIEWING.AST:
-			draw_text(x_,y_,"Not implemented currently");
+			/// temporary
+			var astStr = string(ast);
+			astStr = string_replace_all(astStr,"\t","    ");
+			
+			draw_text(x_,y_,astStr);
+			
+			//draw_text(x_,y_,"Not implemented currently");
 			break;
 		case COZYTEST_VIEWING.BYTECODE:
 			var disassembly = __cozylang_debug_disassemble(bytecode);

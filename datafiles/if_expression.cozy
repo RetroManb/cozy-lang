@@ -1,8 +1,10 @@
 import cozy.std;
 
-local value = if (true) 
-	(0) else
-	(1);
+local condition = true;
+
+local value = if (condition) 
+	(1 + 2 / 3) else
+	("is false");
 
 print(value);
 
