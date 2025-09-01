@@ -122,7 +122,7 @@ function CozyLibraryBuilder(name) constructor {
 	}
 	/// @param {String} name
 	static addLibrary = function(name) {
-		self.__libTarget[$ name] = new CozyObject();
+		self.__libraries[$ name] = new CozyObject();
 		
 		return self;
 	}
