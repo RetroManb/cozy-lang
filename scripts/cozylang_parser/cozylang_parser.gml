@@ -51,7 +51,8 @@ enum COZY_NODE {
 	MODIFIERS = 48,
 	MODIFIER = 49,
 	CLASS_OPERATOR = 51,
-	__SIZE__ = 52,
+	IMPORTONLY = 52,
+	__SIZE__ = 53,
 }
 
 function CozyNode(type,value=undefined) constructor {
@@ -267,6 +268,18 @@ function CozyParser(env) constructor {
 	static parseImport = function(lexer) {
 		var names = [];
 		
+		var isImportOnly = false;
+		
+		var exclamationToken = lexer.peek();
+		if (exclamationToken.type == COZY_TOKEN.OPERATOR)
+		{
+			if (exclamationToken.value != "!")
+				throw $"Malformed import";
+			
+			isImportOnly = true;
+			lexer.next();
+		}
+		
 		var gettingNames = true;
 		while (gettingNames)
 		{
@@ -306,7 +319,9 @@ function CozyParser(env) constructor {
 		}
 				
 		return new CozyNode(
-			COZY_NODE.IMPORT,
+			isImportOnly ?
+				COZY_NODE.IMPORTONLY :
+				COZY_NODE.IMPORT,
 			names
 		);
 	}

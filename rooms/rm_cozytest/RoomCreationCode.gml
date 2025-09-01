@@ -1,1 +1,0 @@
-cozylang_init();

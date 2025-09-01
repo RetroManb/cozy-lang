@@ -315,6 +315,7 @@ function CozyBytecode() constructor {
 						i++;
 						break;
 					case COZY_INSTR.IMPORT:
+					case COZY_INSTR.IMPORTONLY:
 						buffer_write(buffer,buffer_u16,value);
 						i++;
 						break;
@@ -488,6 +489,7 @@ function CozyBytecode() constructor {
 					addConstOffset();
 					break;
 				case COZY_INSTR.IMPORT:
+				case COZY_INSTR.IMPORTONLY:
 					self.push(buffer_read(buffer,buffer_u16));
 					break;
 				case COZY_INSTR.LESS_OR_EQUALS:
@@ -565,8 +567,6 @@ function CozyBytecode() constructor {
 			
 			var constOffset = buffer_peek(buffer,buffOffset,COZY_BYTECODE_ADDRESS_BUFFERTYPE);
 			var value = constValues[$ string(constOffset)];
-			show_debug_message($"buff[{buffOffset} = {constOffset}");
-			show_debug_message(constValues);
 			self.set(arrOffset,value);
 		}
 	}
@@ -1522,6 +1522,12 @@ function __cozylang_debug_disassemble(bytecode) {
 				line = $"IMPORT {count}\n";
 				i++;
 				break;
+			case COZY_INSTR.IMPORTONLY:
+				var count = bytecode[i+1];
+				
+				line = $"IMPORTONLY {count}\n";
+				i++;
+				break;
 			case COZY_INSTR.LESS_OR_EQUALS:
 				line = $"LESS_OR_EQUALS\n";
 				break;
@@ -1740,6 +1746,7 @@ function CozyCompiler(env) constructor {
 				default:
 					throw $"Malformed import";
 				case COZY_NODE.IMPORT:
+				case COZY_NODE.IMPORTONLY:
 					var names = child.value;
 					
 					for (var j = array_length(names)-1; j >= 0; j--)
@@ -1750,7 +1757,10 @@ function CozyCompiler(env) constructor {
 						bytecode.push(name);
 					}
 					
-					bytecode.push(COZY_INSTR.IMPORT);
+					var instr = child.type == COZY_NODE.IMPORT ?
+						COZY_INSTR.IMPORT :
+						COZY_INSTR.IMPORTONLY;
+					bytecode.push(instr);
 					bytecode.push(array_length(names));
 					break;
 			}

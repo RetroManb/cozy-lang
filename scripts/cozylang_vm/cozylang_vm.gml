@@ -26,7 +26,7 @@ enum COZY_INSTR {
 	IMPORT = 24,
 	LESS_OR_EQUALS = 25,
 	GREATER_OR_EQUALS = 26,
-	UNUSED_1B = 27,
+	IMPORTONLY = 27,
 	RETURN = 28,
 	HALT = 29,
 	UNUSED_1E = 30,
@@ -1326,6 +1326,7 @@ function CozyState(env) constructor {
 					pc++;
 					break;
 				case COZY_INSTR.IMPORT:
+				case COZY_INSTR.IMPORTONLY:
 					var count = bytecode[pc+1];
 					
 					var fullNameArr = [];
@@ -1336,7 +1337,11 @@ function CozyState(env) constructor {
 					
 					var prevLocals = self.removeAllLocals();
 					
-					library.applyToState(self,self.env.flags.importSubLibraries);
+					var applyChildren = instruction == COZY_INSTR.IMPORT ?
+						self.env.flags.importSubLibraries :
+						false
+					
+					library.applyToState(self,applyChildren);
 					
 					self.restoreAllLocals(prevLocals);
 					
