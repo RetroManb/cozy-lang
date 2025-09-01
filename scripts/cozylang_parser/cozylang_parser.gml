@@ -172,15 +172,56 @@ function __cozylang_directive_define_modifyTokens(directiveNode,lexer) {
 	//show_debug_message(lexer.tokens);
 }
 
+/// @ignore
+/// @param {Struct.CozyParser} parser
+/// @param {Struct.CozyLexer} lexer
+/// @param {Struct.CozyNode} directiveNode
+function __cozylang_directive_include_parse(parser,lexer,directiveNode) {
+	var stringLiteral = lexer.nextWithNewline();
+	if (stringLiteral.type != COZY_TOKEN.LITERAL or !is_string(stringLiteral.value))
+		throw $"Malformed include directive";
+	
+	directiveNode.addChild(new CozyNode(
+		COZY_NODE.LITERAL,
+		stringLiteral.value
+	));
+	directiveNode.addChild(new CozyNode(
+		COZY_NODE.LITERAL,
+		lexer.tokenIndex
+	));
+}
+
+/// @ignore
+/// @param {Struct.CozyNode} directiveNode
+/// @param {Struct.CozyLexer} lexer
+function __cozylang_directive_include_modifyTokens(directiveNode,lexer) {
+	var filepath = directiveNode.children[0].value;
+	if (!lexer.env.fileExists(filepath))
+	{
+		lexer.env.stderrWriteLine($"Couldn't include file {filepath}");
+		return;
+	}
+	
+	var lexerPosition = directiveNode.children[1].value;
+	
+	var newLexer = new CozyLexer(lexer.env);
+	
+	newLexer.tokenizeFile(filepath);
+	
+	for (var i = 0, n = array_length(newLexer.tokens); i < n-1; i++)
+		array_insert(lexer.tokens,i+lexerPosition,newLexer.tokens[i]);
+	
+	delete newLexer;
+}
+
 /// @param {Struct.CozyEnvironment} env
 function CozyParser(env) constructor {
 	self.env = env;
 	
 	self.env.directives[$ "define"].parseDirective = __cozylang_directive_define_parse;
 	self.env.directives[$ "define"].modifyTokens = __cozylang_directive_define_modifyTokens;
-	self.env.directives[$ "include"].parseDirective = function() {
-		throw "include directive isn't implemented";
-	};
+	self.env.directives[$ "include"].parseDirective = __cozylang_directive_include_parse;
+	self.env.directives[$ "include"].modifyTokens = __cozylang_directive_include_modifyTokens;
 	
 	/// @param {Struct.CozyLexer} lexer
 	static parseDirectives = function(lexer) {
@@ -220,6 +261,11 @@ function CozyParser(env) constructor {
 					
 					for (var i = 0; i < lexer.tokenIndex-start; i++)
 						array_push(directiveIndices,start+i);
+					
+					var prevPos = lexer.tokenIndex;
+					
+					directive.modifyTokens(directiveNode,lexer);
+					lexer.tokenIndex = prevPos;
 					break;
 			}
 		}
@@ -1987,7 +2033,7 @@ function CozyParser(env) constructor {
 			undefined
 		);
 		
-		// Check the entire file for directives
+		// Directives
 		var directivesNode = self.parseDirectives(lexer);
 		lexer.resetToStart();
 		
@@ -1996,16 +2042,6 @@ function CozyParser(env) constructor {
 		lexer.resetToStart();
 		self.removeTokensOfType(lexer,COZY_TOKEN.COMMENT);
 		lexer.resetToStart();
-		
-		// Apply directive token modification
-		for (var i = 0, n = array_length(directivesNode.children); i < n; i++)
-		{
-			var directiveNode = directivesNode.children[i];
-			var directive = self.env.directives[$ directiveNode.value];
-			
-			directive.modifyTokens(directiveNode,lexer);
-			lexer.resetToStart();
-		}
 		
 		// Imports first
 		var importsNode = self.parseImports(lexer);

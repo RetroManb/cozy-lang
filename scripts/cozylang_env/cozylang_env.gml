@@ -325,7 +325,25 @@ function CozyEnvironment() constructor {
 			self.stderrFlush(text);
 	}
 	
-	/// banned stuff
+	/// file sandbox
+	self.fileExists = function(fname) {
+		if (array_length(self.allowedDirectories) > 0 and array_get_index(self.allowedDirectories,filename_dir(fname)) < 0)
+			return false;
+		
+		return file_exists(fname);
+	}
+	self.fileTextOpenRead = function(fname) {
+		self.assertFileExists(fname);
+		
+		return file_text_open_read(fname);
+	}
+	
+	static assertFileExists = function(fname,exception=$"File {fname} does not exist or is not viewable to the current environment") {
+		if (!self.fileExists(fname))
+			throw exception;
+	}
+	
+	/// restrictions
 	self.bannedNames = [
 		"toString",
 			/// PLEASE DONT GET RID OF THIS
@@ -333,7 +351,7 @@ function CozyEnvironment() constructor {
 			/// annoying to deal with as gamemaker LOVES to insert it into every struct
 			/// instead of putting it in the base struct's static struct or whatever
 			///
-			/// that is the ONE feature about structs in gamemaker that i HATE soemtimes
+			/// that is the ONE feature about structs in gamemaker that i do not like
 			///	due to the dumb loopholes I tried to do to let cozy and GML be nice to
 			/// eachother
 		COZY_NAME_GET,
@@ -341,6 +359,7 @@ function CozyEnvironment() constructor {
 		COZY_NAME_CANDELETE,
 			/// Reserved struct variable names for cozy
 	];
+	self.allowedDirectories = [];
 	
 	/// @param {String} name
 	/// @returns {Bool}

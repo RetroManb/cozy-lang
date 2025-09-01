@@ -2,7 +2,7 @@
 import cozy.std;
 import cozy.array;
 
-const func MyFunction(params args) {
+local func MyFunction(params args) {
 	print(array.Unpack(args));
 };
 

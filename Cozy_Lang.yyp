@@ -35,6 +35,7 @@
     {"$GMIncludedFile":"","%Name":"if.cozy","CopyToMask":-1,"filePath":"datafiles","name":"if.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"import_only.cozy","CopyToMask":-1,"filePath":"datafiles","name":"import_only.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"import_only.cz","CopyToMask":-1,"filePath":"datafiles","name":"import_only.cz","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
+    {"$GMIncludedFile":"","%Name":"include_included.cozy","CopyToMask":-1,"filePath":"datafiles","name":"include_included.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"include.cozy","CopyToMask":-1,"filePath":"datafiles","name":"include.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"local_class.cozy","CopyToMask":-1,"filePath":"datafiles","name":"local_class.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"local_const.cozy","CopyToMask":-1,"filePath":"datafiles","name":"local_const.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
