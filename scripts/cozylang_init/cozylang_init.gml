@@ -1,4 +1,4 @@
-#macro COZY_VERSION "1.0.0"
+#macro COZY_VERSION "0.0.0"
 
 function cozylang_init() {
 	global.cozylang = {};
