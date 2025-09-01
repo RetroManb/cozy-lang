@@ -1144,6 +1144,7 @@ function CozyState(env) constructor {
 		if (is_cozyobject(object))
 		{
 			var result = object.getInfixOperatorResult(operator,rhs,self);
+			show_debug_message(result)
 			if (result[0])
 			{
 				if (array_length(result) > 1)

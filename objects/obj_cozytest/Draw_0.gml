@@ -90,6 +90,8 @@ draw_set_alpha(1);
 
 var h = string_height(" ");
 
+var y_ = room_height/2;
+
 for (var i = 0, n = array_length(output); i < n; i++)
 {
 	var line = output[i];
@@ -97,7 +99,9 @@ for (var i = 0, n = array_length(output); i < n; i++)
 	var txt = line[1];
 	
 	draw_set_color(col);
-	draw_text_ext(0,room_height/2+i*string_height_ext(txt,h,320),txt,h,320);
+	draw_text_ext(0,y_,txt,h,320);
+	
+	y_ += string_height_ext(txt,h,320);
 }
 
 draw_set_color(c_white);

@@ -89,19 +89,19 @@ const final class !Color {
 		if (other instanceof Color)
 		{
 			return new Color(
-				R + other.R,
-				G + other.G,
-				B + other.B,
-				A + other.A
+				this.R + other.R,
+				this.G + other.G,
+				this.B + other.B,
+				this.A + other.A
 			);
 		}
 		else if (types.isNumeric(other))
 		{
 			return new Color(
-				R + other,
-				G + other,
-				B + other,
-				A
+				this.R + other,
+				this.G + other,
+				this.B + other,
+				this.A
 			);
 		}
 	}
@@ -109,19 +109,19 @@ const final class !Color {
 		if (other instanceof Color)
 		{
 			return new Color(
-				R - other.R,
-				G - other.G,
-				B - other.B,
-				A - other.A
+				this.R - other.R,
+				this.G - other.G,
+				this.B - other.B,
+				this.A - other.A
 			);
 		}
 		else if (types.isNumeric(other))
 		{
 			return new Color(
-				R - other,
-				G - other,
-				B - other,
-				A
+				this.R - other,
+				this.G - other,
+				this.B - other,
+				this.A
 			);
 		}
 	}
@@ -129,19 +129,19 @@ const final class !Color {
 		if (other instanceof Color)
 		{
 			return new Color(
-				R * other.R,
-				G * other.G,
-				B * other.B,
-				A * other.A
+				this.R * other.R,
+				this.G * other.G,
+				this.B * other.B,
+				this.A * other.A
 			);
 		}
 		else if (types.isNumeric(other))
 		{
 			return new Color(
-				R * other,
-				G * other,
-				B * other,
-				A
+				this.R * other,
+				this.G * other,
+				this.B * other,
+				this.A
 			);
 		}
 	}
@@ -149,19 +149,19 @@ const final class !Color {
 		if (other instanceof Color)
 		{
 			return new Color(
-				R / other.R,
-				G / other.G,
-				B / other.B,
-				A / other.A
+				this.R / other.R,
+				this.G / other.G,
+				this.B / other.B,
+				this.A / other.A
 			);
 		}
 		else if (types.isNumeric(other))
 		{
 			return new Color(
-				R / other,
-				G / other,
-				B / other,
-				A
+				this.R / other,
+				this.G / other,
+				this.B / other,
+				this.A
 			);
 		}
 	}
@@ -169,19 +169,19 @@ const final class !Color {
 		if (other instanceof Color)
 		{
 			return new Color(
-				R ** other.R,
-				G ** other.G,
-				B ** other.B,
-				A ** other.A
+				this.R ** other.R,
+				this.G ** other.G,
+				this.B ** other.B,
+				this.A ** other.A
 			);
 		}
 		else if (types.isNumeric(other))
 		{
 			return new Color(
-				R ** other,
-				G ** other,
-				B ** other,
-				A
+				this.R ** other,
+				this.G ** other,
+				this.B ** other,
+				this.A
 			);
 		}
 	}
