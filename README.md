@@ -38,15 +38,15 @@ for (local i = 1; i <= count; i += 1) {
 }
 ```
 
+## Performance
+
+I dunno it's probably decent
+
 # *Everything under here will be put into a wiki when I make this public, I'm lazy*
 
 ## All reserved words
 
 `if else while for func switch case default return break continue property import params local const goto do class constructor destructor new delete instanceof classof is operator`
-
-## Performance
-
-I dunno it's probably decent
 
 # Environment flags
 
