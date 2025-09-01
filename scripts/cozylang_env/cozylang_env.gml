@@ -431,25 +431,26 @@ function CozyEnvironment() constructor {
 	self.infixOpBindingPower[$ "&"] = [15,15.1];
 	self.infixOpBindingPower[$ "|"] = [15,15.1];
 	self.infixOpBindingPower[$ "^"] = [15,15.1];
-	self.infixOpBindingPower[$ "&&"] = [-5,-4.9];
-	self.infixOpBindingPower[$ "||"] = [-5,-4.9];
-	self.infixOpBindingPower[$ "^^"] = [-5,-4.9];
+	self.infixOpBindingPower[$ "&&"] = [0,0.1];
+	self.infixOpBindingPower[$ "||"] = [0,0.1];
+	self.infixOpBindingPower[$ "^^"] = [0,0.1];
+	self.infixOpBindingPower[$ "??"] = [-2,-1.9];
 	self.infixOpBindingPower[$ "instanceof"] = [18,18.1];
 	self.infixOpBindingPower[$ "is"] = [18,18.1];
-	self.infixOpBindingPower[$ "="] = [0,0.1];
-	self.infixOpBindingPower[$ "+="] = [0,0.1];
-	self.infixOpBindingPower[$ "-="] = [0,0.1];
-	self.infixOpBindingPower[$ "*="] = [0,0.1];
-	self.infixOpBindingPower[$ "/="] = [0,0.1];
-	self.infixOpBindingPower[$ "%="] = [0,0.1];
-	self.infixOpBindingPower[$ "**="] = [0,0.1];
-	self.infixOpBindingPower[$ "//="] = [0,0.1];
-	self.infixOpBindingPower[$ "??="] = [0,0.1];
-	self.infixOpBindingPower[$ "<<="] = [0,0.1];
-	self.infixOpBindingPower[$ ">>="] = [0,0.1];
-	self.infixOpBindingPower[$ "&="] = [0,0.1];
-	self.infixOpBindingPower[$ "|="] = [0,0.1];
-	self.infixOpBindingPower[$ "^="] = [0,0.1];
+	self.infixOpBindingPower[$ "="] = [-4.9,-5];
+	self.infixOpBindingPower[$ "+="] = [-4.9,-5];
+	self.infixOpBindingPower[$ "-="] = [-4.9,-5];
+	self.infixOpBindingPower[$ "*="] = [-4.9,-5];
+	self.infixOpBindingPower[$ "/="] = [-4.9,-5];
+	self.infixOpBindingPower[$ "%="] = [-4.9,-5];
+	self.infixOpBindingPower[$ "**="] = [-4.9,-5];
+	self.infixOpBindingPower[$ "//="] = [-4.9,-5];
+	self.infixOpBindingPower[$ "??="] = [-4.9,-5];
+	self.infixOpBindingPower[$ "<<="] = [-4.9,-5];
+	self.infixOpBindingPower[$ ">>="] = [-4.9,-5];
+	self.infixOpBindingPower[$ "&="] = [-4.9,-5];
+	self.infixOpBindingPower[$ "|="] = [-4.9,-5];
+	self.infixOpBindingPower[$ "^="] = [-4.9,-5];
 	
 	self.prefixOpBindingPower = {};
 	self.prefixOpBindingPower[$ "+"] = 5;
@@ -521,7 +522,7 @@ function CozyEnvironment() constructor {
 	self.libraries = {};
 	
 	/// @param {String} name
-	/// @param {Struct.CozyFunction} library
+	/// @param {Struct.CozyLibrary} library
 	static addLibrary = function(name,library) {
 		if (struct_exists(self.libraries,name))
 			show_debug_message($"Overwriting already existing library \"{name}\"");
@@ -547,6 +548,120 @@ function CozyEnvironment() constructor {
 		return current;
 	}
 	
+	/// @param {String} dname
+	/// @param {String} namePrefix
+	/// @returns {Struct.CozyLibrary}
+	static newLibraryFromDirectory = function(dname,namePrefix="") {
+		/// @feather disable GM1045
+		if (!directory_exists(dname))
+			return undefined;
+		if (!file_exists(dname + "/init.cozy") and !file_exists(dname + "/init.cz"))
+			return undefined;
+		
+		var libName = namePrefix + filename_name(dname);
+		var libInitBytecode = undefined;
+		var buffer = undefined;
+		
+		var subLibraries = [];
+	
+		try {
+			/// init.cozy / init.cz
+			if (file_exists(dname + "/init.cozy"))
+			{
+				var codeString = "";
+				
+				buffer = buffer_load(dname + "/init.cozy");
+				codeString = buffer_read(buffer,buffer_string);
+				buffer_delete(buffer);
+				
+				libInitBytecode = self.compileBytecode(libName,codeString);
+			}
+			else
+			{
+				var bytecodeStruct = new CozyBytecode();
+				buffer = buffer_load(dname + "/init.cz");
+				bytecodeStruct.fromBuffer(buffer);
+				buffer_delete(buffer);
+				libInitBytecode = bytecodeStruct.bytecode;
+				delete bytecodeStruct;
+			}
+			
+			/// sub-libraries
+			var subLibraryDirectories = [];
+			
+			var dir = file_find_first(dname + "/*",fa_directory);
+			while (dir != "")
+			{
+				array_push(subLibraryDirectories,dir);
+				
+				dir = file_find_next();
+			}
+			file_find_close();
+			
+			for (var i = 0, n = array_length(subLibraryDirectories); i < n; i++)
+			{
+				var subLibraryName = subLibraryDirectories[i];
+				
+				var subLibrary = self.newLibraryFromDirectory(dname + "/" + subLibraryName);
+				if (!is_undefined(subLibrary))
+				{
+					subLibrary.name = subLibraryName;
+					
+					array_push(subLibraries,subLibrary);
+				}
+			}
+		}
+		catch (e) {
+			if (buffer_exists(buffer))
+				buffer_delete(buffer);
+			
+			self.stderrWriteLine($"Error while loading library {libName}: {e}");
+			return undefined;
+		}
+	
+		var library = new CozyLibrary(libName,libInitBytecode);
+		/// @feather enable GM1045
+		
+		for (var i = 0, n = array_length(subLibraries); i < n; i++)
+		{
+			var subLibrary = subLibraries[i];
+			
+			library.addChild(libName + "." + subLibrary.name,subLibrary);
+		}
+		
+		return library;
+	}
+	
+	/// @param {String} dname
+	/// @returns {Array<Struct.CozyLibrary>}
+	static newLibrariesInDirectory = function(dname) {
+		var arr = [];
+		
+		var libs = [];
+		
+		var dir = file_find_first(dname + "/*",fa_directory);
+		while (dir != "")
+		{
+			array_push(libs,dir);
+			
+			dir = file_find_next();
+		}
+		file_find_close();
+		
+		for (var i = 0, n = array_length(libs); i < n; i++)
+		{
+			var libraryDir = libs[i];
+			
+			var library = self.newLibraryFromDirectory(dname + "/" + libraryDir);
+			
+			if (!is_undefined(library))
+				array_push(arr,library);
+		}
+		
+		return arr;
+	}
+	
+	/// add built-in libraries
 	var libs = __cozylang_get_libraries(self);
 	var libNames = struct_get_names(libs);
 	for (var i = 0, n = array_length(libNames); i < n; i++)
@@ -579,6 +694,7 @@ function __cozylang_get_libraries(env) {
 			math.DegAtan = method(undefined,darctan);
 			math.DegAtan2 = method(undefined,darctan2);
 			math.Ceil = method(undefined,ceil);
+			math.Clamp = method(undefined,clamp);
 			math.Cos = method(undefined,cos);
 			math.DegCos = method(undefined,dcos);
 			math.RadToDeg = method(undefined,radtodeg);

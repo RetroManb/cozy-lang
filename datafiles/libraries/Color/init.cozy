@@ -1,0 +1,188 @@
+import cozy.types;
+import cozy.math;
+import cozy.string;
+
+const final class !Color {
+	property R {
+		{
+			return rawget(this,"R");
+		}
+		value {
+			if (!types.IsNumeric(value))
+			{
+				value = 0;
+			}
+			value = math.Clamp(value,0,1);
+			
+			rawset(this,"R",value);
+		}
+	}
+	property G {
+		{
+			return rawget(this,"G");
+		}
+		value {
+			if (!types.IsNumeric(value))
+			{
+				value = 0;
+			}
+			value = math.Clamp(value,0,1);
+			
+			rawset(this,"G",value);
+		}
+	}
+	property B {
+		{
+			return rawget(this,"B");
+		}
+		value {
+			if (!types.IsNumeric(value))
+			{
+				value = 0;
+			}
+			value = math.Clamp(value,0,1);
+			
+			rawset(this,"B",value);
+		}
+	}
+	property A {
+		{
+			return rawget(this,"A");
+		}
+		value {
+			if (!types.IsNumeric(value))
+			{
+				value = 0;
+			}
+			value = math.Clamp(value,0,1);
+			
+			rawset(this,"A",value);
+		}
+	}
+	
+	static func FromRGBA(r,g,b,a) {
+		return new Color(r,g,b,a);
+	}
+	static func FromRGB(r,g,b) {
+		return new Color(r,g,b,1);
+	}
+	static func FromValue(v,a) {
+		return new Color(v,v,v,a ?? 1);
+	}
+	
+	constructor(r,g,b,a) {
+		this.R = r ?? 0;
+		this.G = g ?? 0;
+		this.B = b ?? 0;
+		this.A = a ?? 0;
+	}
+	
+	static func ToString {
+		return "Color<" + 
+			string.ToString(this.R) + "," +
+			string.ToString(this.G) + "," +
+			string.ToString(this.B) + "," +
+			string.ToString(this.A) + ">";
+	}
+	
+	operator infix+(other) {
+		if (other instanceof Color)
+		{
+			return new Color(
+				R + other.R,
+				G + other.G,
+				B + other.B,
+				A + other.A
+			);
+		}
+		else if (types.isNumeric(other))
+		{
+			return new Color(
+				R + other,
+				G + other,
+				B + other,
+				A
+			);
+		}
+	}
+	operator infix-(other) {
+		if (other instanceof Color)
+		{
+			return new Color(
+				R - other.R,
+				G - other.G,
+				B - other.B,
+				A - other.A
+			);
+		}
+		else if (types.isNumeric(other))
+		{
+			return new Color(
+				R - other,
+				G - other,
+				B - other,
+				A
+			);
+		}
+	}
+	operator infix*(other) {
+		if (other instanceof Color)
+		{
+			return new Color(
+				R * other.R,
+				G * other.G,
+				B * other.B,
+				A * other.A
+			);
+		}
+		else if (types.isNumeric(other))
+		{
+			return new Color(
+				R * other,
+				G * other,
+				B * other,
+				A
+			);
+		}
+	}
+	operator infix/(other) {
+		if (other instanceof Color)
+		{
+			return new Color(
+				R / other.R,
+				G / other.G,
+				B / other.B,
+				A / other.A
+			);
+		}
+		else if (types.isNumeric(other))
+		{
+			return new Color(
+				R / other,
+				G / other,
+				B / other,
+				A
+			);
+		}
+	}
+	operator infix**(other) {
+		if (other instanceof Color)
+		{
+			return new Color(
+				R ** other.R,
+				G ** other.G,
+				B ** other.B,
+				A ** other.A
+			);
+		}
+		else if (types.isNumeric(other))
+		{
+			return new Color(
+				R ** other,
+				G ** other,
+				B ** other,
+				A
+			);
+		}
+	}
+}

@@ -1,3 +1,15 @@
+/// library file structure
+
+libraryA/ -- Main library "libraryA"
+	- subLibraryA/ -- Sub-library "libraryA.subLibraryA"
+		...
+	- subLibraryB/ -- Sub-library "libraryA.subLibraryB"
+		...
+	- subLibraryC/ -- Sub-library "libraryA.subLibraryC"
+		...
+	- init.cozy OR init.cz
+	- *.*
+
 /// ideas
 
 //// halt statement

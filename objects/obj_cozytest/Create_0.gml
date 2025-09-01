@@ -409,5 +409,18 @@ saveCompiled = function(fname) {
 	
 	return "";
 }
+loadCustomLibraries = function() {
+	var libraries = env.newLibrariesInDirectory("libraries");
+	show_debug_message(libraries);
+	
+	for (var i = 0, n = array_length(libraries); i < n; i++)
+	{
+		var library = libraries[i];
+		
+		env.addLibrary(library.name,library);
+		
+		env.stdoutWriteLine($"Added library {library.name}");
+	}
+}
 
 //alarm_set(0,10);
