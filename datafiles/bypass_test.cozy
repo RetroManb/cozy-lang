@@ -1,0 +1,5 @@
+import cozy.std;
+
+print(global);
+print(-5);
+print(-5 . cozylang);

@@ -21,6 +21,7 @@
   "IncludedFiles":[
     {"$GMIncludedFile":"","%Name":"all_possible_variable_declaration.cozy","CopyToMask":-1,"filePath":"datafiles","name":"all_possible_variable_declaration.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"bitwise_and_bool.cozy","CopyToMask":-1,"filePath":"datafiles","name":"bitwise_and_bool.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
+    {"$GMIncludedFile":"","%Name":"bypass_test.cozy","CopyToMask":-1,"filePath":"datafiles","name":"bypass_test.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"class.cozy","CopyToMask":-1,"filePath":"datafiles","name":"class.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"const.cozy","CopyToMask":-1,"filePath":"datafiles","name":"const.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"custom-library-test.cozy","CopyToMask":-1,"filePath":"datafiles","name":"custom-library-test.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},

@@ -407,7 +407,7 @@ function CozyBytecode() constructor {
 			{
 				for (var i = 0, n = array_length(undefinedOffsets); i < n; i++)
 				{
-					var offset = list[i];
+					var offset = undefinedOffsets[i];
 					
 					buffer_poke(buffer,offset,COZY_BYTECODE_ADDRESS_BUFFERTYPE,buffer_tell(buffer));
 				}
