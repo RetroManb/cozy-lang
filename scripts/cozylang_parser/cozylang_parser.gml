@@ -105,7 +105,7 @@ function CozyNode(type,value=undefined) constructor {
 function __cozylang_directive_define_parse(parser,lexer,directiveNode) {
 	var identifier = lexer.nextWithNewline();
 	if (identifier.type != COZY_TOKEN.IDENTIFIER)
-		throw $"Malformed define directive";
+		throw $"Malformed define directive @ line: {identifier.line} col: {identifier.col}";
 	
 	var tokenNodes = [];
 	
@@ -124,7 +124,7 @@ function __cozylang_directive_define_parse(parser,lexer,directiveNode) {
 			case COZY_TOKEN.BACKSLASH:
 				var next = lexer.nextWithNewline();
 				if (next.type != COZY_TOKEN.EOL)
-					throw $"Malformed define directive";
+					throw $"Malformed define directive @ line: {identifier.line} col: {identifier.col}";
 				break;
 			case COZY_TOKEN.EOL:
 				parsingDefine = false;
@@ -180,7 +180,7 @@ function __cozylang_directive_define_modifyTokens(directiveNode,lexer) {
 function __cozylang_directive_include_parse(parser,lexer,directiveNode) {
 	var stringLiteral = lexer.nextWithNewline();
 	if (stringLiteral.type != COZY_TOKEN.LITERAL or !is_string(stringLiteral.value))
-		throw $"Malformed include directive";
+		throw $"Malformed include directive @ line: {stringLiteral.line} col: {stringLiteral.col}";
 	
 	directiveNode.addChild(new CozyNode(
 		COZY_NODE.LITERAL,
@@ -321,7 +321,7 @@ function CozyParser(env) constructor {
 		if (exclamationToken.type == COZY_TOKEN.OPERATOR)
 		{
 			if (exclamationToken.value != "!")
-				throw $"Malformed import";
+				throw $"Malformed import @ line: {exclamationToken.line} col: {exclamationToken.col}";
 			
 			isImportOnly = true;
 			lexer.next();
@@ -334,7 +334,7 @@ function CozyParser(env) constructor {
 			switch (nameToken.type)
 			{
 				default:
-					throw $"Malformed import";
+					throw $"Malformed import @ line: {nameToken.line} col: {nameToken.col}";
 				case COZY_TOKEN.IDENTIFIER:
 				case COZY_TOKEN.OPERATOR:
 					array_push(names,nameToken.value);
@@ -345,10 +345,10 @@ function CozyParser(env) constructor {
 					switch (next.type)
 					{
 						default:
-							throw $"Malformed import";
+							throw $"Malformed import @ line: {next.line} col: {next.col}";
 						case COZY_TOKEN.OPERATOR:
 							if (next.value != ".")
-								throw $"Malformed import";
+								throw $"Malformed import @ line: {next.line} col: {next.col}";
 							
 							lexer.next();
 							break;
@@ -406,9 +406,9 @@ function CozyParser(env) constructor {
 		switch (next.type)
 		{
 			default:
-				throw $"Unexpected token";
+				throw $"Unexpected token @ line: {next.line} col: {next.col}";
 			case COZY_TOKEN.GOTO:
-				throw $"goto statement is unimplemented";
+				throw $"goto statement is unimplemented @ line: {next.line} col: {next.col}";
 			case COZY_TOKEN.SEMICOLON:
 				lexer.next();
 				break;
@@ -525,7 +525,7 @@ function CozyParser(env) constructor {
 		switch (next.type)
 		{
 			default:
-				throw $"Malformed modifier statement";
+				throw $"Malformed modifier statement @ line: {next.line} col: {next.col}";
 			case COZY_TOKEN.CLASS:
 				lexer.next();
 				var classNode = self.parseClass(lexer);
@@ -556,7 +556,7 @@ function CozyParser(env) constructor {
 		switch (next.type)
 		{
 			default:
-				throw $"Malformed local statement";
+				throw $"Malformed local statement @ line: {next.line} col: {next.col}";
 			case COZY_TOKEN.FUNC:
 				lexer.next();
 				var funcNode = self.parseFunc(lexer);
@@ -612,7 +612,7 @@ function CozyParser(env) constructor {
 		
 		var identifier = lexer.next();
 		if (identifier.type != COZY_TOKEN.IDENTIFIER)
-			throw $"Malformed local variable statement";
+			throw $"Malformed local variable statement @ line: {identifier.line} col: {identifier.col}";
 		
 		localNode.value = identifier.value;
 		
@@ -620,10 +620,10 @@ function CozyParser(env) constructor {
 		switch (equals.type)
 		{
 			default:
-				throw $"Malformed local variable statement";
+				throw $"Malformed local variable statement @ line: {equals.line} col: {equals.col}";
 			case COZY_TOKEN.OPERATOR:
 				if (equals.value != "=")
-					throw $"Malformed local variable statement";
+					throw $"Malformed local variable statement @ line: {equals.line} col: {equals.col}";
 				break;
 			case COZY_TOKEN.SEMICOLON: // local <identifier>;
 				localNode.addChild(new CozyNode(
@@ -638,7 +638,7 @@ function CozyParser(env) constructor {
 		
 		var semicolon = lexer.next();
 		if (semicolon.type != COZY_TOKEN.SEMICOLON)
-			throw $"Malformed local variable statement";
+			throw $"Malformed local variable statement @ line: {semicolon.line} col: {semicolon.col}";
 		
 		localNode.addChild(exprNode);
 		
@@ -652,7 +652,7 @@ function CozyParser(env) constructor {
 		switch (next.type)
 		{
 			default:
-				throw $"Malformed const statement";
+				throw $"Malformed const statement @ line: {next.line} col: {next.col}";
 			case COZY_TOKEN.FUNC:
 				lexer.next();
 				var funcNode = self.parseFunc(lexer);
@@ -691,19 +691,19 @@ function CozyParser(env) constructor {
 		
 		var identifier = lexer.next();
 		if (identifier.type != COZY_TOKEN.IDENTIFIER)
-			throw $"Malformed const variable statement";
+			throw $"Malformed const variable statement @ line: {identifier.line} col: {identifier.col}";
 		
 		localNode.value = identifier.value;
 		
 		var equals = lexer.next();
 		if (equals.type != COZY_TOKEN.OPERATOR or equals.value != "=")
-			throw $"Malformed const variable statement";
+			throw $"Malformed const variable statement @ line: {equals.line} col: {equals.col}";
 		
 		var exprNode = self.parseExpression(lexer);
 		
 		var semicolon = lexer.next();
 		if (semicolon.type != COZY_TOKEN.SEMICOLON)
-			throw $"Malformed const variable statement";
+			throw $"Malformed const variable statement @ line: {semicolon.line} col: {semicolon.col}";
 		
 		localNode.addChild(exprNode);
 		
@@ -723,7 +723,7 @@ function CozyParser(env) constructor {
 		// Check for open bracket and skip
 		var next = lexer.next();
 		if (next.type != COZY_TOKEN.LEFT_BRACKET)
-			throw $"Malformed if statement";
+			throw $"Malformed if statement @ line: {next.line} col: {next.col}";
 		
 		var trueNode = self.parseBody(lexer);
 		
@@ -748,7 +748,7 @@ function CozyParser(env) constructor {
 			{
 				// Check for open bracket and skip
 				if (next.type != COZY_TOKEN.LEFT_BRACKET)
-					throw $"Malformed if statement";
+					throw $"Malformed if statement @ line: {next.line} col: {next.col}";
 				
 				falseNode = self.parseBody(lexer);
 			}
@@ -774,7 +774,7 @@ function CozyParser(env) constructor {
 		// Check for open bracket and skip
 		var next = lexer.next();
 		if (next.type != COZY_TOKEN.LEFT_BRACKET)
-			throw $"Malformed while statement";
+			throw $"Malformed while statement @ line: {next.line} col: {next.col}";
 		
 		var bodyNode = self.parseBody(lexer);
 		
@@ -790,7 +790,7 @@ function CozyParser(env) constructor {
 		
 		var next = lexer.next();
 		if (next.type != COZY_TOKEN.LEFT_BRACKET)
-			throw $"Malformed do statement";
+			throw $"Malformed do statement @ line: {next.line} col: {next.col}";
 		
 		var bodyNode = self.parseBody(lexer);
 		
@@ -826,7 +826,7 @@ function CozyParser(env) constructor {
 		// Check for open parenthesis and skip
 		var next = lexer.next();
 		if (next.type != COZY_TOKEN.LEFT_PAREN)
-			throw $"Malformed for statement";
+			throw $"Malformed for statement @ line: {next.line} col: {next.col}";
 		
 		var initResult = self.parseStatement(lexer);
 		var initStatementNode = initResult.node;
@@ -838,7 +838,7 @@ function CozyParser(env) constructor {
 		// Check for semicolon and skip
 		var next = lexer.next();
 		if (next.type != COZY_TOKEN.SEMICOLON)
-			throw $"Malformed for statement";
+			throw $"Malformed for statement @ line: {next.line} col: {next.col}";
 		
 		var endExprNode = self.parseExpression(lexer);
 		
@@ -849,12 +849,12 @@ function CozyParser(env) constructor {
 		// Check for closed parenthesis and skip
 		var next = lexer.next();
 		if (next.type != COZY_TOKEN.RIGHT_PAREN)
-			throw $"Malformed for statement";
+			throw $"Malformed for statement @ line: {next.line} col: {next.col}";
 		
 		// Check for open bracket and skip
 		var next = lexer.next();
 		if (next.type != COZY_TOKEN.LEFT_BRACKET)
-			throw $"Malformed for statement";
+			throw $"Malformed for statement @ line: {next.line} col: {next.col}";
 		
 		var bodyNode = self.parseBody(lexer);
 		
@@ -896,14 +896,14 @@ function CozyParser(env) constructor {
 			switch (first.type)
 			{
 				default:
-					throw $"Malformed function arguments";
+					throw $"Malformed function arguments @ line: {first.line} col: {first.col}";
 				case COZY_TOKEN.IDENTIFIER:
 					argNode.value = first.value;
 					break;
 				case COZY_TOKEN.PARAMS:
 					var identifier = lexer.next();
 					if (identifier.type != COZY_TOKEN.IDENTIFIER)
-						throw $"Malformed function arguments";
+						throw $"Malformed function arguments @ line: {first.line} col: {first.col}";
 					
 					argNode.type = COZY_NODE.ARGUMENT_PARAMS;
 					argNode.value = identifier.value;
@@ -916,10 +916,10 @@ function CozyParser(env) constructor {
 			switch (last.type)
 			{
 				default:
-					throw $"Malformed function arguments";
+					throw $"Malformed function arguments @ line: {last.line} col: {last.col}";
 				case COZY_TOKEN.COMMA:
 					if (needsToStop)
-						throw $"Malformed function arguments";
+						throw $"Malformed function arguments @ line: {last.line} col: {last.col}";
 					break;
 				case COZY_TOKEN.RIGHT_PAREN:
 					parsingFuncAguments = false;
@@ -943,7 +943,7 @@ function CozyParser(env) constructor {
 		var identifier = lexer.next();
 		//show_debug_message(identifier);
 		if (identifier.type != COZY_TOKEN.IDENTIFIER)
-			throw $"Malformed func statement";
+			throw $"Malformed func statement @ line: {identifier.line} col: {identifier.col}";
 		
 		funcNode.value = identifier.value;
 		
@@ -956,7 +956,7 @@ function CozyParser(env) constructor {
 		switch (next.type)
 		{
 			default:
-				throw $"Malformed func statement";
+				throw $"Malformed func statement @ line: {next.line} col: {next.col}";
 			case COZY_TOKEN.LEFT_PAREN:
 				delete argsNode;
 				argsNode = self.parseFuncArguments(lexer);
@@ -968,7 +968,7 @@ function CozyParser(env) constructor {
 		// Check for open bracket and skip
 		var next = lexer.next();
 		if (next.type != COZY_TOKEN.LEFT_BRACKET)
-			throw $"Malformed func statement";
+			throw $"Malformed func statement @ line: {next.line} col: {next.col}";
 		
 		var bodyNode = self.parseBody(lexer);
 		
@@ -990,19 +990,19 @@ function CozyParser(env) constructor {
 		switch (next.type)
 		{
 			default:
-				throw $"Malformed class statement";
+				throw $"Malformed class statement @ line: {next.line} col: {next.col}";
 			case COZY_TOKEN.IDENTIFIER:
 				className = next.value;
 				break;
 			case COZY_TOKEN.OPERATOR:
 				if (next.value != "!") // strict classes
-					throw $"Malformed class statement";
+					throw $"Malformed class statement @ line: {next.line} col: {next.col}";
 				
 				isStrict = true;
 				
 				var identifier = lexer.next();
 				if (identifier.type != COZY_TOKEN.IDENTIFIER)
-					throw $"Malformed class statement";
+					throw $"Malformed class statement @ line: {next.line} col: {next.col}";
 					
 				className = identifier.value;
 				break;
@@ -1013,20 +1013,20 @@ function CozyParser(env) constructor {
 		switch (next.type)
 		{
 			default:
-				throw $"Malformed class statement";
+				throw $"Malformed class statement @ line: {next.line} col: {next.col}";
 			case COZY_TOKEN.COLON:
 				var inheritedIdentifier = lexer.next();
 				if (inheritedIdentifier.type != COZY_TOKEN.IDENTIFIER)
-					throw $"Malformed class statement";
+					throw $"Malformed class statement @ line: {next.line} col: {next.col}";
 				
 				parentName = inheritedIdentifier.value;
 				
 				if (className == parentName)
-					throw $"Malformed class statement";
+					throw $"Malformed class statement @ line: {next.line} col: {next.col}";
 				
 				var leftBracket = lexer.next();
 				if (leftBracket.type != COZY_TOKEN.LEFT_BRACKET)
-					throw $"Malformed class statement";
+					throw $"Malformed class statement @ line: {next.line} col: {next.col}";
 				break;
 			case COZY_TOKEN.LEFT_BRACKET:
 				break;
@@ -1080,10 +1080,10 @@ function CozyParser(env) constructor {
 		switch (next.type)
 		{
 			default:
-				throw $"Unexpected token";
+				throw $"Unexpected token @ line: {next.line} col: {next.col}";
 			case COZY_TOKEN.OPERATOR_KW:
 				if (!self.env.flags.operatorOverloading)
-					throw $"Operator overloading is not available";
+					throw $"Operator overloading is disabled @ line: {next.line} col: {next.col}";
 				
 				lexer.next();
 				node = self.parseClassOperator(lexer);
@@ -1141,14 +1141,14 @@ function CozyParser(env) constructor {
 		
 		var identifier = lexer.next();
 		if (identifier.type != COZY_TOKEN.IDENTIFIER)
-			throw $"Malformed operator statement";
+			throw $"Malformed operator statement @ line: {identifier.line} col: {identifier.col}";
 		
 		var hasArgument = true;
 		
 		switch (identifier.value)
 		{
 			default:
-				throw $"Invalid operator type {identifier.value}";
+				throw $"Invalid operator type {identifier.value} @ line: {identifier.line} col: {identifier.col}";
 			case "prefix":
 			case "postfix":
 				hasArgument = false;
@@ -1158,28 +1158,28 @@ function CozyParser(env) constructor {
 		
 		var operator = lexer.next();
 		if (operator.type != COZY_TOKEN.OPERATOR)
-			throw $"Malformed operator statement";
+			throw $"Malformed operator statement @ line: {operator.line} col: {operator.col}";
 		operatorNode.value = operator.value;
 		
 		var next = lexer.next();
 		if (next.type != COZY_TOKEN.LEFT_PAREN)
-			throw $"Malformed operator statement";
+			throw $"Malformed operator statement @ line: {next.line} col: {next.col}";
 		
 		var argumentIdentifier = undefined;
 		if (hasArgument)
 		{
 			argumentIdentifier = lexer.next();
 			if (argumentIdentifier.type != COZY_TOKEN.IDENTIFIER)
-				throw $"Malformed operator statement";
+				throw $"Malformed operator statement @ line: {argumentIdentifier.line} col: {argumentIdentifier.col}";
 		}
 		
 		var next = lexer.next();
 		if (next.type != COZY_TOKEN.RIGHT_PAREN)
-			throw $"Malformed operator statement";
+			throw $"Malformed operator statement @ line: {next.line} col: {next.col}";
 		
 		var next = lexer.next();
 		if (next.type != COZY_TOKEN.LEFT_BRACKET)
-			throw $"Malformed operator statement";
+			throw $"Malformed operator statement @ line: {next.line} col: {next.col}";
 		
 		var bodyNode = self.parseBody(lexer);
 		
@@ -1214,7 +1214,7 @@ function CozyParser(env) constructor {
 		switch (next.type)
 		{
 			default:
-				throw $"Unexpected token";
+				throw $"Unexpected token @ line: {next.line} col: {next.col}";
 			case COZY_TOKEN.PROPERTY:
 			case COZY_TOKEN.FUNC:
 				var result = self.parseClassStatement(lexer);
@@ -1254,10 +1254,11 @@ function CozyParser(env) constructor {
 			undefined
 		);
 		
-		switch (lexer.peek().type)
+		var next = lexer.peek();
+		switch (next.type)
 		{
 			default:
-				throw $"Malformed constructor statement";
+				throw $"Malformed constructor statement @ line: {next.line} col: {next.col}";
 			case COZY_TOKEN.LEFT_PAREN:
 				lexer.next();
 				
@@ -1273,7 +1274,7 @@ function CozyParser(env) constructor {
 		// Check for open bracket and skip
 		var next = lexer.next();
 		if (next.type != COZY_TOKEN.LEFT_BRACKET)
-			throw $"Malformed constructor statement";
+			throw $"Malformed constructor statement @ line: {next.line} col: {next.col}";
 		
 		var bodyNode = self.parseBody(lexer);
 		
@@ -1291,23 +1292,24 @@ function CozyParser(env) constructor {
 		);
 		destructorNode.addChild(new CozyNode(COZY_NODE.FUNC_ARGS,undefined));
 		
-		switch (lexer.peek().type)
+		var next = lexer.next();
+		switch (next.type)
 		{
 			default:
-				throw $"Malformed destructor statement";
+				throw $"Malformed destructor statement @ line: {next.line} col: {next.col}";
 			case COZY_TOKEN.LEFT_PAREN:
 				var next = lexer.next();
 				if (next.type != COZY_TOKEN.RIGHT_PAREN)
-					throw $"Malformed destructor statement";
+					throw $"Malformed destructor statement @ line: {next.line} col: {next.col}";
+				
+				// Check for open bracket and skip
+				var next = lexer.next();
+				if (next.type != COZY_TOKEN.LEFT_BRACKET)
+					throw $"Malformed destructor statement @ line: {next.line} col: {next.col}";
 				break;
 			case COZY_TOKEN.LEFT_BRACKET:
 				break;
 		}
-		
-		// Check for open bracket and skip
-		var next = lexer.next();
-		if (next.type != COZY_TOKEN.LEFT_BRACKET)
-			throw $"Malformed destructor statement";
 		
 		var bodyNode = self.parseBody(lexer);
 		
@@ -1339,7 +1341,7 @@ function CozyParser(env) constructor {
 		switch (identifier.type)
 		{
 			default:
-				throw $"Malformed property statement";
+				throw $"Malformed property statement @ line: {identifier.line} col: {identifier.col}";
 			case COZY_TOKEN.IDENTIFIER:
 				propertyNode.value = identifier.value;
 				break;
@@ -1358,14 +1360,14 @@ function CozyParser(env) constructor {
 		switch (next.type)
 		{
 			default:
-				throw $"Malformed property statement";
+				throw $"Malformed property statement @ line: {next.line} col: {next.col}";
 			case COZY_TOKEN.LEFT_BRACKET:
 				break;
 			case COZY_TOKEN.SEMICOLON:
 				return propertyNode;
 			case COZY_TOKEN.OPERATOR: /// property <identifier> = <expression>;
 				if (next.value != "=")
-					throw $"Malformed expression statement";
+					throw $"Malformed expression statement @ line: {next.line} col: {next.col}";
 				
 				switch (propertyNode.value)
 				{
@@ -1373,14 +1375,14 @@ function CozyParser(env) constructor {
 						break;
 					case "@":
 					case "#":
-						throw $"Cannot set value for {propertyNode.value} property";
+						throw $"Cannot set value for {propertyNode.value} property @ line: {next.line} col: {next.col}";
 				}
 				
 				var exprNode = self.parseExpression(lexer);
 				
 				var semicolonToken = lexer.next();
 				if (semicolonToken.type != COZY_TOKEN.SEMICOLON)
-					throw $"Malformed property statement";
+					throw $"Malformed property statement @ line: {semicolonToken.line} col: {semicolonToken.col}";
 				
 				propertyNode.children[1] = exprNode;
 				
@@ -1398,27 +1400,27 @@ function CozyParser(env) constructor {
 			if (isNumericIndex or isFallback)
 			{
 				if (next.type == COZY_TOKEN.RIGHT_BRACKET and !(hasGetter or hasSetter))
-					throw $"Empty {propertyNode.value} property";
+					throw $"Empty {propertyNode.value} property @ line: {next.line} col: {next.col}";
 				
 				if (next.type == COZY_TOKEN.RIGHT_BRACKET and (hasGetter or hasSetter))
 					break;
 				
 				if (next.type != COZY_TOKEN.IDENTIFIER)
-					throw $"Malformed property statement";
+					throw $"Malformed property statement @ line: {next.line} col: {next.col}";
 				
 				var indexIdentifier = next;
 				var next = lexer.next();
 				switch (next.type)
 				{
 					default:
-						throw $"Malformed property statement";
+						throw $"Malformed property statement @ line: {next.line} col: {next.col}";
 					case COZY_TOKEN.COMMA: // this is a setter!
 						if (hasSetter)
-							throw $"Malformed property statement";
+							throw $"Malformed property statement @ line: {next.line} col: {next.col}";
 						
 						var valueIdentifier = lexer.next();
 						if (valueIdentifier.type != COZY_TOKEN.IDENTIFIER)
-							throw $"Malformed property statement";
+							throw $"Malformed property statement @ line: {next.line} col: {next.col}";
 						
 						hasSetter = true;
 						
@@ -1429,7 +1431,7 @@ function CozyParser(env) constructor {
 						
 						var leftBrack = lexer.next();
 						if (leftBrack.type != COZY_TOKEN.LEFT_BRACKET)
-							throw $"Malformed property statement";
+							throw $"Malformed property statement @ line: {leftBrack.line} col: {leftBrack.col}";
 						
 						var setterBodyNode = self.parseBody(lexer);
 						var argsNode = new CozyNode(
@@ -1453,7 +1455,7 @@ function CozyParser(env) constructor {
 						break;
 					case COZY_TOKEN.LEFT_BRACKET: // this is a getter!
 						if (hasGetter)
-							throw $"Malformed property statement";
+							throw $"Malformed property statement @ line: {next.line} col: {next.col}";
 						
 						hasGetter = true;
 						
@@ -1488,10 +1490,10 @@ function CozyParser(env) constructor {
 				switch (next.type)
 				{
 					default:
-						throw $"Malformed property statement";
+						throw $"Malformed property statement @ line: {next.line} col: {next.col}";
 					case COZY_TOKEN.LEFT_BRACKET:
 						if (hasGetter)
-							throw $"Malformed property statement";
+							throw $"Malformed property statement @ line: {next.line} col: {next.col}";
 						
 						hasGetter = true;
 						
@@ -1512,11 +1514,11 @@ function CozyParser(env) constructor {
 						break;
 					case COZY_TOKEN.IDENTIFIER:
 						if (hasSetter)
-							throw $"Malformed property statement";
+							throw $"Malformed property statement @ line: {next.line} col: {next.col}";
 						
 						var leftBrack = lexer.next();
 						if (leftBrack.type != COZY_TOKEN.LEFT_BRACKET)
-							throw $"Malformed property statement";
+							throw $"Malformed property statement @ line: {next.line} col: {next.col}";
 						
 						hasSetter = true;
 						
@@ -1573,7 +1575,7 @@ function CozyParser(env) constructor {
 			switch (next.type)
 			{
 				default:
-					throw $"Malformed return statement";
+					throw $"Malformed return statement @ line: {next.line} col: {next.col}";
 				case COZY_TOKEN.COMMA:
 					lexer.next();
 					break;
@@ -1600,7 +1602,7 @@ function CozyParser(env) constructor {
 		// Check for open bracket and skip
 		var next = lexer.next();
 		if (next.type != COZY_TOKEN.LEFT_BRACKET)
-			throw $"Malformed switch statement";
+			throw $"Malformed switch statement @ line: {next.line} col: {next.col}";
 		
 		var caseNodes = [];
 		
@@ -1613,7 +1615,7 @@ function CozyParser(env) constructor {
 			switch (next.type)
 			{
 				default:
-					throw $"Malformed switch statement";
+					throw $"Malformed switch statement @ line: {next.line} col: {next.col}";
 				case COZY_TOKEN.CASE:
 					lexer.next();
 					var caseNode = self.parseSwitchCase(lexer);
@@ -1624,7 +1626,7 @@ function CozyParser(env) constructor {
 					lexer.next();
 					
 					if (hasDefault)
-						throw $"Duplicate default case in switch statement";
+						throw $"Duplicate default case in switch statement @ line: {next.line} col: {next.col}";
 					
 					var defaultNode = self.parseSwitchDefault(lexer);
 					
@@ -1659,7 +1661,7 @@ function CozyParser(env) constructor {
 		// Check for open bracket and skip
 		var next = lexer.next();
 		if (next.type != COZY_TOKEN.LEFT_BRACKET)
-			throw $"Malformed switch case"
+			throw $"Malformed switch case @ line: {next.line} col: {next.col}"
 		
 		var bodyNode = self.parseBody(lexer);
 		
@@ -1682,13 +1684,13 @@ function CozyParser(env) constructor {
 		switch (identifier.type)
 		{
 			default:
-				throw $"Malformed switch default case";
+				throw $"Malformed switch default case @ line: {identifier.line} col: {identifier.col}";
 			case COZY_TOKEN.IDENTIFIER:
 				defaultNode.value = identifier.value;
 				
 				var leftBrack = lexer.next();
 				if (leftBrack.type != COZY_TOKEN.LEFT_BRACKET)
-					throw $"Malformed switch default case"
+					throw $"Malformed switch default case @ line: {identifier.line} col: {identifier.col}"
 				break;
 			case COZY_TOKEN.LEFT_BRACKET:
 				break;
@@ -1708,7 +1710,7 @@ function CozyParser(env) constructor {
 		var lhs = lexer.next();
 		
 		if (parenOnly and lhs.type != COZY_TOKEN.LEFT_PAREN)
-			throw $"Expected open parenthesis in expression";
+			throw $"Expected open parenthesis in expression @ line: {lhs.line} col: {lhs.col}";
 		
 		switch (lhs.type)
 		{
@@ -1726,7 +1728,7 @@ function CozyParser(env) constructor {
 				
 				var rightParen = lexer.next();
 				if (rightParen.type != COZY_TOKEN.RIGHT_PAREN)
-					throw $"Malformed parenthesis in expression";
+					throw $"Missing parenthesis in expression @ line: {rhs.line} col: {rhs.col}";
 				
 				if (parenOnly)
 					return lhs;
@@ -1745,7 +1747,7 @@ function CozyParser(env) constructor {
 				break;
 			case COZY_TOKEN.OPERATOR:
 				if (!self.env.isValidPrefixOperator(lhs.value))
-					throw $"Invalid operator {lhs.value} in expression";
+					throw $"Invalid operator {lhs.value} in expression @ line: {lhs.line} col: {lhs.col}";
 				
 				var rightBP = self.env.getPrefixOpBindingPower(lhs.value);
 				var rhs = self.parseExpression(lexer,rightBP);
@@ -1776,7 +1778,7 @@ function CozyParser(env) constructor {
 			switch (op.type)
 			{
 				default:
-					throw $"Unexpected token in expression";
+					throw $"Unexpected token in expression @ line: {op.line} col: {op.col}";
 				case COZY_TOKEN.LEFT_PAREN:
 					lexer.next();
 					
@@ -1806,7 +1808,7 @@ function CozyParser(env) constructor {
 					break;
 				case COZY_TOKEN.OPERATOR:
 					if (!self.env.isValidOperator(op.value))
-						throw $"Invalid operator {op.value} in expression";
+						throw $"Invalid operator {op.value} in expression @ line: {op.line} col: {op.col}";
 					break;
 				case COZY_TOKEN.LEFT_SQ_BRACK:
 					lexer.next();
@@ -1815,7 +1817,7 @@ function CozyParser(env) constructor {
 				
 					var rightSqBrack = lexer.next();
 					if (rightSqBrack.type != COZY_TOKEN.RIGHT_SQ_BRACK)
-						throw $"Malformed brackets in expression";
+						throw $"Missing brackets in expression @ line: {rightSqBrack.line} col: {rightSqBrack.col}";
 					
 					var opNode = new CozyNode(
 						COZY_NODE.BIN_OPERATOR,
@@ -1925,7 +1927,7 @@ function CozyParser(env) constructor {
 		
 		var elseNode = lexer.next();
 		if (elseNode.type != COZY_TOKEN.ELSE)
-			throw $"Malformed if expression";
+			throw $"Malformed if expression @ line: {elseNode.line} col: {elseNode.col}";
 		
 		var falseNode = self.parseExpression(lexer,-infinity,true);
 		
@@ -1943,7 +1945,7 @@ function CozyParser(env) constructor {
 		switch (exprNode.type)
 		{
 			default:
-				throw $"Malformed new expression";
+				throw $"Malformed new expression @ line: {exprNode.line} col: {exprNode.col}";
 			case COZY_NODE.CALL:
 				exprNode.type = COZY_NODE.NEW_OBJECT;
 				return exprNode;
@@ -1951,7 +1953,7 @@ function CozyParser(env) constructor {
 				switch (exprNode.value)
 				{
 					default:
-						throw $"Malformed new expression";
+						throw $"Malformed new expression @ line: {exprNode.line} col: {exprNode.col}";
 					case ".":
 					case "[":
 						break;
@@ -1975,10 +1977,11 @@ function CozyParser(env) constructor {
 			undefined
 		);
 		
-		switch (lexer.peek().type)
+		var next = lexer.peek();
+		switch (next.type)
 		{
 			default:
-				throw $"Malformed func expression";
+				throw $"Malformed func expression @ line: {next.line} col: {next.col}";
 			case COZY_TOKEN.LEFT_PAREN:
 				lexer.next();
 				
@@ -1994,7 +1997,7 @@ function CozyParser(env) constructor {
 		// Check for open bracket and skip
 		var next = lexer.next();
 		if (next.type != COZY_TOKEN.LEFT_BRACKET)
-			throw $"Malformed func expression";
+			throw $"Malformed func expression @ line: {next.line} col: {next.col}";
 		
 		var bodyNode = self.parseBody(lexer);
 		
@@ -2023,7 +2026,7 @@ function CozyParser(env) constructor {
 			switch (next.type)
 			{
 				default:
-					throw $"Malformed function call";
+					throw $"Malformed function call @ line: {next.line} col: {next.col}";
 				case COZY_TOKEN.LITERAL:
 				case COZY_TOKEN.IDENTIFIER:
 				case COZY_TOKEN.OPERATOR:
@@ -2039,7 +2042,7 @@ function CozyParser(env) constructor {
 			switch (next.type)
 			{
 				default:
-					throw $"Malformed function call";
+					throw $"Malformed function call @ line: {next.line} col: {next.col}";
 				case COZY_TOKEN.RIGHT_PAREN:
 					parsingArguments = false;
 					break;
