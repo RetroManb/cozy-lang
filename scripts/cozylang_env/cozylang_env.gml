@@ -199,10 +199,9 @@ function CozyDirective() constructor {
 	
 	/// @param {Struct.CozyNode} directiveNode
 	/// @param {Struct.CozyToken} lexer
-	/// @returns {Struct.CozyNode}
 	self.modifyTokens = function(directiveNode,lexer) {}
 	
-	self.modifyNodeChildren = false;
+	self.modifyNodeChildren = true;
 	
 	/// @param {Struct.CozyNode} directiveNode
 	/// @param {Struct.CozyNode} node
