@@ -294,7 +294,7 @@ function CozyEnvironment() constructor {
 		codeString = buffer_read(buffer,buffer_string);
 		buffer_delete(buffer);
 		
-		return self.parse(codeString);
+		return self.parseString(codeString);
 	}
 	
 	/// directives
