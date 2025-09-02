@@ -331,11 +331,6 @@ function CozyEnvironment() constructor {
 		
 		return file_exists(fname);
 	}
-	self.fileTextOpenRead = function(fname) {
-		self.assertFileExists(fname);
-		
-		return file_text_open_read(fname);
-	}
 	
 	static assertFileExists = function(fname,exception=$"File {fname} does not exist or is not viewable to the current environment") {
 		if (!self.fileExists(fname))
