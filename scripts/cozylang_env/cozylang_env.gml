@@ -490,13 +490,13 @@ function CozyEnvironment() constructor {
 	}
 	
 	/// @param {String} op
-	/// @returns {Array<Real>}
+	/// @returns {Real}
 	static getPrefixOpBindingPower = function(op) {
 		return self.prefixOpBindingPower[$ op];
 	}
 	
 	/// @param {String} op
-	/// @returns {Array<Real>}
+	/// @returns {Real}
 	static getPostfixOpBindingPower = function(op) {
 		return self.postfixOpBindingPower[$ op];
 	}
