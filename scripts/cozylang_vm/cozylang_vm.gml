@@ -216,7 +216,7 @@ function CozyClass(name,constructorFn=undefined,destructorFn=undefined,parentNam
 		{
 			array_push(__visited,self);
 			
-			throw $"Class inheritence loop detected: {__cozylang_concat(__visited," -> ")}";
+			throw $"Class inheritance loop detected: {__cozylang_concat(__visited," -> ")}";
 		}
 		
 		array_push(__visited,self);

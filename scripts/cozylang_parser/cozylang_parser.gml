@@ -50,10 +50,10 @@ enum COZY_NODE {
 	LOCAL_CONST_CLASS = 47,
 	MODIFIERS = 48,
 	MODIFIER = 49,
-	CLASS_OPERATOR = 51,
-	IMPORTONLY = 52,
-	IF_EXPRESSION = 53,
-	__SIZE__ = 54,
+	CLASS_OPERATOR = 50,
+	IMPORTONLY = 51,
+	IF_EXPRESSION = 52,
+	__SIZE__ = 53,
 }
 
 function CozyNode(type,value=undefined) constructor {
