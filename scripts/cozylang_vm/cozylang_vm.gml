@@ -55,14 +55,14 @@ enum COZY_INSTR {
 	SET_PROPERTY = 53,
 	INSTANCEOF = 54,
 	CLASSOF = 55,
-	NEW_STRUCT = 56,
-	NEW_ARRAY = 57,
+	WRAP_STRUCT = 56,
+	WRAP_ARRAY = 57,
 	NEW_OBJECT = 58,
 	DELETE_OBJECT = 59,
 	BOOL_COERCE = 60,
 	WRAP_CLASS = 61,
 	PUSH_STACKFLAG = 62,
-	WRAP_ARRAY = 63,
+	UNUSED_3F = 63,
 	__SIZE__ = 64,
 }
 
@@ -70,7 +70,9 @@ enum COZY_INSTR {
 enum COZY_STACKFLAG {
 	NONE = 0,
 	ARG_END = 1,
-	__SIZE__ = 2,
+	ARRAY_END = 2,
+	STRUCT_END = 3,
+	__SIZE__ = 4,
 }
 
 /// @param {String} name
@@ -711,8 +713,17 @@ function CozyStackFlag(value) constructor {
 		var val = "UNKNOWN";
 		switch (self.value)
 		{
+			case COZY_STACKFLAG.NONE:
+				val = "NONE";
+				break;
 			case COZY_STACKFLAG.ARG_END:
 				val = "ARG_END";
+				break;
+			case COZY_STACKFLAG.ARRAY_END:
+				val = "ARRAY_END";
+				break;
+			case COZY_STACKFLAG.STRUCT_END:
+				val = "STRUCT_END";
 				break;
 		}
 		
@@ -1487,11 +1498,47 @@ function CozyState(env) constructor {
 					
 					self.setProperty(object,name,value);
 					break;
-				case COZY_INSTR.NEW_STRUCT:
-					self.pushStack({});
+				case COZY_INSTR.WRAP_STRUCT:
+					var arr = [];
+					
+					var top = self.topStack();
+					while (!(is_struct(top) and is_instanceof(top,CozyStackFlag) and top.value == COZY_STACKFLAG.STRUCT_END))
+					{
+						array_push(arr,self.popStack());
+						top = self.topStack();
+					}
+					self.popStack();
+					
+					if (array_length(arr)%2 != 0)
+						throw $"Wrong struct literal";
+					
+					var struct = {};
+					for (var i = 0, n = array_length(arr); i < n; i += 2)
+					{
+						var name = arr[i];
+						var value = arr[i+1];
+						
+						struct[$ name] = value;
+					}
+					
+					self.pushStack(struct);
+					
+					pc++;
 					break;
-				case COZY_INSTR.NEW_ARRAY:
-					self.pushStack([]);
+				case COZY_INSTR.WRAP_ARRAY:
+					var arr = [];
+					
+					var top = self.topStack();
+					while (!(is_struct(top) and is_instanceof(top,CozyStackFlag) and top.value == COZY_STACKFLAG.ARRAY_END))
+					{
+						array_push(arr,self.popStack());
+						top = self.topStack();
+					}
+					self.popStack();
+					
+					self.pushStack(arr);
+					
+					pc++;
 					break;
 				case COZY_INSTR.NEW_OBJECT:
 					var pushNewObject = bytecode[pc+1];
@@ -1579,17 +1626,6 @@ function CozyState(env) constructor {
 						throw $"Attempt to push a non-numeric stack flag"
 					
 					self.pushStack(new CozyStackFlag(value));
-					pc++;
-					break;
-				case COZY_INSTR.WRAP_ARRAY:
-					var count = bytecode[pc+1];
-					
-					var arr = [];
-					for (var i = 0; i < count; i++)
-						array_push(arr,self.popStack());
-					
-					self.pushStack(arr);
-					
 					pc++;
 					break;
 				
