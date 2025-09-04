@@ -842,6 +842,24 @@ function cozylang_execute(fn,args,cozyState) {
 	/// @feather enable GM1045
 }
 
+/// @param {Function|Struct.CozyFunction} fn
+/// @param {Array<Any>} args
+/// @param {Struct.CozyState} cozyState
+/// @returns {Array<Any>}
+function cozylang_try_execute(fn,args,cozyState) {
+	if (cozylang_is_callable(fn))
+	{
+		try {
+			var result = cozylang_execute(fn,args,cozyState);
+			return result;
+		}
+		catch (e) {
+			return [false,e];
+		}
+	}
+	return [false,"Invalid function"];
+}
+
 /// @ignore
 function __cozylang_concat(arr,delim) {
 	if (array_length(arr) == 0)
