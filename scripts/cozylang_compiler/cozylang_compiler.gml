@@ -449,7 +449,7 @@ function CozyBytecode() constructor {
 			switch (instruction)
 			{
 				default:
-					show_debug_message(buffer_tell(buffer));
+					//show_debug_message(buffer_tell(buffer));
 					throw $"Unknown instruction {instruction} found in bytecode during deserialization";
 				case COZY_INSTR.PUSH_CONST:
 					addConstOffset();
@@ -3127,9 +3127,9 @@ function CozyCompiler(env) constructor {
 		);
 		notNode.addChild(expressionNode);
 		
-		show_debug_message(notNode);
-		show_debug_message(trueNode);
-		show_debug_message(falseNode);
+		//show_debug_message(notNode);
+		//show_debug_message(trueNode);
+		//show_debug_message(falseNode);
 		
 		self.compileExpression(notNode,bytecode);
 		
