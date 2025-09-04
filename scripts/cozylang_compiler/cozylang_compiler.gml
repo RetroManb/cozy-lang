@@ -359,8 +359,8 @@ function CozyBytecode() constructor {
 					case COZY_INSTR.INSTANCEOF:
 					case COZY_INSTR.CLASSOF:
 						break;
-					case COZY_INSTR.NEW_ARRAY:
-					case COZY_INSTR.NEW_STRUCT:
+					case COZY_INSTR.WRAP_ARRAY:
+					case COZY_INSTR.WRAP_STRUCT:
 						break;
 					case COZY_INSTR.NEW_OBJECT:
 						buffer_write(buffer,buffer_u8,bool(value));
@@ -376,10 +376,6 @@ function CozyBytecode() constructor {
 						break;
 					case COZY_INSTR.PUSH_STACKFLAG:
 						buffer_write(buffer,buffer_u8,value);
-						i++;
-						break;
-					case COZY_INSTR.WRAP_ARRAY:
-						buffer_write(buffer,buffer_u16,value);
 						i++;
 						break;
 				}
@@ -528,8 +524,8 @@ function CozyBytecode() constructor {
 				case COZY_INSTR.INSTANCEOF:
 				case COZY_INSTR.CLASSOF:
 					break;
-				case COZY_INSTR.NEW_ARRAY:
-				case COZY_INSTR.NEW_STRUCT:
+				case COZY_INSTR.WRAP_STRUCT:
+				case COZY_INSTR.WRAP_ARRAY:
 					break;
 				case COZY_INSTR.NEW_OBJECT:
 					self.push(bool(buffer_read(buffer,buffer_u8)));
@@ -543,9 +539,6 @@ function CozyBytecode() constructor {
 					break;
 				case COZY_INSTR.PUSH_STACKFLAG:
 					self.push(buffer_read(buffer,buffer_u8));
-					break;
-				case COZY_INSTR.WRAP_ARRAY:
-					self.push(buffer_read(buffer,buffer_u16));
 					break;
 			}
 		}
@@ -1612,11 +1605,11 @@ function __cozylang_debug_disassemble(bytecode) {
 			case COZY_INSTR.CLASSOF:
 				line = $"CLASSOF\n";
 				break;
-			case COZY_INSTR.NEW_STRUCT:
-				line = $"NEW_STRUCT\n";
+			case COZY_INSTR.WRAP_STRUCT:
+				line = $"WRAP_STRUCT\n";
 				break;
-			case COZY_INSTR.NEW_ARRAY:
-				line = $"NEW_ARRAY\n";
+			case COZY_INSTR.WRAP_ARRAY:
+				line = $"WRAP_ARRAY\n";
 				break;
 			case COZY_INSTR.NEW_OBJECT:
 				var pushNewObject = bytecode[i+1];
@@ -1640,12 +1633,6 @@ function __cozylang_debug_disassemble(bytecode) {
 				var value = bytecode[i+1];
 				
 				line = $"PUSH_STACKFLAG {value}\n";
-				i++;
-				break;
-			case COZY_INSTR.WRAP_ARRAY:
-				var count = bytecode[i+1];
-				
-				line = $"WRAP_ARRAY {count}\n";
 				i++;
 				break;
 		}
