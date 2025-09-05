@@ -1,0 +1,32 @@
+import cozy.std;
+
+final class !Singleton {
+	static property _instance {
+		{
+			return rawget(Singleton,"_instance");
+		}
+		value {
+			if (Singleton._instance instanceof Singleton) {
+				throw("Singleton already instantiated");
+			}
+			
+			rawset(Singleton,"_instance",value);
+		}
+	}
+	
+	static func GetInstance() {
+		if (!(Singleton._instance instanceof Singleton))
+		{
+			Singleton._instance = new Singleton();
+		}
+		
+		return Singleton._instance;
+	}
+	
+	property Value = 0;
+	
+	constructor {
+	}
+}
+
+libexpose_const("Singleton",Singleton);

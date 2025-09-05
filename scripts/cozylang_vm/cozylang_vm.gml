@@ -83,7 +83,8 @@ enum COZY_STACKFLAG {
 /// @param {Array<String>} modifiers
 /// @param {Struct} statics
 /// @param {Struct} staticProperties
-function CozyClass(name,constructorFn=undefined,destructorFn=undefined,parentName="",isStrict=false,modifiers=[],statics={},staticProperties={}) constructor {
+/// @param {Struct.CozyState} owner
+function CozyClass(name,constructorFn=undefined,destructorFn=undefined,parentName="",isStrict=false,modifiers=[],statics={},staticProperties={},owner=undefined) constructor {
 	self.name = name;
 	self.constructorFn = is_callable(constructorFn) ?
 		method(undefined,constructorFn) :
@@ -99,6 +100,8 @@ function CozyClass(name,constructorFn=undefined,destructorFn=undefined,parentNam
 	self.parentName = parentName;
 	self.isStrict = isStrict;
 	self.modifiers = modifiers;
+	
+	self.owner = owner;
 	
 	/// static property initializers
 	var staticNames = struct_get_names(self.staticProperties);
@@ -129,7 +132,7 @@ function CozyClass(name,constructorFn=undefined,destructorFn=undefined,parentNam
 	/// @param {Struct.CozyObject} object
 	/// @param {Struct.CozyState} state
 	/// @returns {Bool}
-	static objectIsInstance = function(object,state) {
+	static objectIsInstance = function(object,state=self.owner) {
 		if (is_undefined(object))
 			return false;
 		if (object.class == self)
@@ -147,7 +150,7 @@ function CozyClass(name,constructorFn=undefined,destructorFn=undefined,parentNam
 	
 	/// @param {Struct.CozyState} state
 	/// @returns {Struct.CozyClass}
-	static getParentClass = function(state) {
+	static getParentClass = function(state=self.owner) {
 		var parent = state.get(self.parentName);
 		/// @feather disable GM1045
 		if (!is_cozyclass(parent))
@@ -163,7 +166,7 @@ function CozyClass(name,constructorFn=undefined,destructorFn=undefined,parentNam
 	/// @param {String} name
 	/// @param {Struct.CozyState} state
 	/// @returns {Any}
-	static getStatic = function(name,state) {
+	static getStatic = function(name,state=self.owner) {
 		__cozylang_check_timeout(state);
 		
 		if (is_cozyproperty(self.staticProperties[$ name]) and !cozylang_is_callable(self.staticProperties[$ name].initializer) and cozylang_is_callable(self.staticProperties[$ name].getter))
@@ -185,7 +188,7 @@ function CozyClass(name,constructorFn=undefined,destructorFn=undefined,parentNam
 	/// @param {String} name
 	/// @param {Any} Value
 	/// @param {Struct.CozyState} state
-	static setStatic = function(name,value,state) {
+	static setStatic = function(name,value,state=self.owner) {
 		__cozylang_check_timeout(state);
 		
 		if (is_cozyproperty(self.staticProperties[$ name]))
@@ -213,7 +216,7 @@ function CozyClass(name,constructorFn=undefined,destructorFn=undefined,parentNam
 	/// @param {Array<Any>} args
 	/// @param {Struct.CozyState} state
 	/// @returns {Struct.CozyObject}
-	static newObject = function(args,state,__visited=[],__callConstructor=true) {
+	static newObject = function(args,state=self.owner,__visited=[],__callConstructor=true) {
 		if (array_get_index(__visited,self) >= 0)
 		{
 			array_push(__visited,self);
@@ -228,7 +231,7 @@ function CozyClass(name,constructorFn=undefined,destructorFn=undefined,parentNam
 		if (is_undefined(parentClass))
 		{
 			if (self != global.cozylang.baseClass)
-				object = new CozyObject();
+				object = new CozyObject(state);
 			else
 				object = global.cozylang.baseClass.newObject(args,state,__visited);
 		}
@@ -426,7 +429,8 @@ function CozyObjectProperty(name,object,getter,setter,initializer=undefined,modi
 	}
 }
 
-function CozyObject() constructor {
+/// @param {Struct.CozyState} owner
+function CozyObject(owner=undefined) constructor {
 	self.variables = {};
 	self.properties = {};
 	self.operators = {};
@@ -434,6 +438,8 @@ function CozyObject() constructor {
 	self.postfixOperators = {};
 	self.class = global.cozylang.baseClass;
 	self.isStrict = false;
+	
+	self.owner = owner;
 	
 	/// @param {String} name
 	/// @returns {Struct.CozyFunction}
@@ -481,7 +487,7 @@ function CozyObject() constructor {
 	/// @param {Any} rhs
 	/// @param {Struct.CozyState} state
 	/// @returns {Array<Any>}
-	static getInfixOperatorResult = function(name,rhs,state) {
+	static getInfixOperatorResult = function(name,rhs,state=self.owner) {
 		/// @feather disable GM1045
 		if (!struct_exists(self.operators,name))
 			return [false];
@@ -502,7 +508,7 @@ function CozyObject() constructor {
 	/// @param {String} name
 	/// @param {Struct.CozyState} state
 	/// @returns {Array<Any>}
-	static getPrefixOperatorResult = function(name,state) {
+	static getPrefixOperatorResult = function(name,state=self.owner) {
 		/// @feather disable GM1045
 		if (!struct_exists(self.prefixOperators,name))
 			return [false];
@@ -523,7 +529,7 @@ function CozyObject() constructor {
 	/// @param {String} name
 	/// @param {Struct.CozyState} state
 	/// @returns {Array<Any>}
-	static getPostfixOperatorResult = function(name,state) {
+	static getPostfixOperatorResult = function(name,state=self.owner) {
 		/// @feather disable GM1045
 		if (!struct_exists(self.postfixOperators,name))
 			return [false];
@@ -543,7 +549,7 @@ function CozyObject() constructor {
 	
 	/// @param {String} name
 	/// @param {Struct.CozyState} state
-	static get = function(name,state) {
+	static get = function(name,state=self.owner) {
 		__cozylang_check_timeout(state);
 		
 		if (struct_exists(self.properties,name))
@@ -574,7 +580,7 @@ function CozyObject() constructor {
 	/// @param {String} name
 	/// @param {Any} value
 	/// @param {Struct.CozyState} state
-	static set = function(name,value,state) {
+	static set = function(name,value,state=self.owner) {
 		__cozylang_check_timeout(state);
 		
 		if (struct_exists(self.properties,name))
@@ -628,7 +634,7 @@ function CozyObject() constructor {
 	}
 	
 	static toString = function() {
-		var state = array_last(global.cozylang.stateStack);
+		var state = self.owner ?? array_last(global.cozylang.stateStack);
 		
 		var toStringFn = self.variables[$ "ToString"];
 		if (!is_cozyfunc(toStringFn) and is_cozyclass(self.class))
@@ -674,7 +680,8 @@ function CozyObject() constructor {
 /// @param {Array<String>} argNames
 /// @param {Bool} hasParams
 /// @param {Struct.CozyObject} target
-function CozyFunction(name,bytecode,argNames=[],hasParams=false,target=undefined) constructor {
+/// @param {Struct.CozyState} owner
+function CozyFunction(name,bytecode,argNames=[],hasParams=false,target=undefined,owner=undefined) constructor {
 	self.name = name;
 	self.bytecode = is_callable(bytecode) ?
 		method(target,bytecode) :
@@ -682,6 +689,8 @@ function CozyFunction(name,bytecode,argNames=[],hasParams=false,target=undefined
 	self.argNames = argNames;
 	self.hasParams = hasParams;
 	self.target = target;
+	
+	self.owner = owner;
 	
 	static toString = function() {
 		var _target = is_cozyobject(self.target) ?
@@ -780,6 +789,11 @@ function cozylang_execute(fn,args,cozyState) {
 		return [true,method_call(fn,args)];
 	if (is_cozyfunc(fn))
 	{
+		if (!(is_struct(cozyState) and is_instanceof(cozyState,CozyState)))
+		{
+			cozyState = fn.owner;
+		}
+		
 		if (is_callable(fn.bytecode))
 		{
 			var result = method_call(fn.bytecode,args);
@@ -904,6 +918,8 @@ function cozylang_is_truthy(value) {
 function __cozylang_check_timeout(state) {
 	gml_pragma("forceinline");
 	
+	if (is_undefined(state.timeoutStart))
+		state.timeoutStart = current_time;
 	if (current_time > state.timeoutStart+COZY_TIMEOUT_MS)
 		throw $"Timeout of {COZY_TIMEOUT_MS}ms exceeded ({current_time-state.timeoutStart}ms > {COZY_TIMEOUT_MS}ms)";
 }
@@ -1056,11 +1072,11 @@ function CozyState(env) constructor {
 		if (is_struct(object))
 		{
 			if (is_instanceof(object,CozyClass))
-				return object.getStatic(name,self);
+				return object.getStatic(name);
 			else if (is_instanceof(object,CozyFunction))
 				return undefined;
 			else if (is_instanceof(object,CozyObject))
-				return object.get(name,self);
+				return object.get(name);
 			else
 			{
 				if (self.env.flags.structGetterSetters and struct_exists(object,COZY_NAME_GET))
@@ -1172,7 +1188,7 @@ function CozyState(env) constructor {
 	static handleInfixOperatorOverload = function(operator,object,rhs) {
 		if (is_cozyobject(object))
 		{
-			var result = object.getInfixOperatorResult(operator,rhs,self);
+			var result = object.getInfixOperatorResult(operator,rhs);
 			//show_debug_message(result)
 			if (result[0])
 			{
@@ -1190,7 +1206,7 @@ function CozyState(env) constructor {
 	static handlePrefixOperatorOverload = function(operator,object) {
 		if (is_cozyobject(object))
 		{
-			var result = object.getPrefixOperatorResult(operator,state);
+			var result = object.getPrefixOperatorResult(operator);
 			if (result[0])
 			{
 				if (array_length(result) > 1)
@@ -1209,7 +1225,7 @@ function CozyState(env) constructor {
 	static handlePostfixOperatorOverload = function(operator,object) {
 		if (is_cozyobject(object))
 		{
-			var result = object.getPostfixOperatorResult(operator,state);
+			var result = object.getPostfixOperatorResult(operator);
 			if (result[0])
 			{
 				if (array_length(result) > 1)
@@ -1298,7 +1314,7 @@ function CozyState(env) constructor {
 					var fnBytecode = self.popStack();
 					var fnName = self.popStack();
 					
-					self.pushStack(new CozyFunction(fnName,fnBytecode,argNames,fnHasParams));
+					self.pushStack(new CozyFunction(fnName,fnBytecode,argNames,fnHasParams,undefined,self));
 					
 					pc++;
 					break;
@@ -1559,7 +1575,7 @@ function CozyState(env) constructor {
 					}
 					self.popStack();
 					
-					var object = cozyClass.newObject(newArguments,self);
+					var object = cozyClass.newObject(newArguments);
 					
 					if (pushNewObject)
 						self.pushStack(object);
@@ -1587,7 +1603,8 @@ function CozyState(env) constructor {
 						classIsStrict,
 						classModifiers,
 						classStatics,
-						classStaticProperties
+						classStaticProperties,
+						self
 					);
 					
 					// add functions
@@ -1595,6 +1612,7 @@ function CozyState(env) constructor {
 					{
 						var fn = classFunctions[i];
 						var fnName = string_split(fn.name,".")[1];
+						fn.owner = self;
 						
 						wrappedClass.functions[$ fnName] = fn;
 					}
@@ -1603,6 +1621,12 @@ function CozyState(env) constructor {
 					for (var i = 0, n = array_length(classProperties); i < n; i++)
 					{
 						var property = classProperties[i];
+						if (is_cozyfunc(property.getter))
+							property.getter.owner = self;
+						if (is_cozyfunc(property.setter))
+							property.setter.owner = self;
+						if (is_cozyfunc(property.initializer))
+							property.initializer.owner = self;
 						wrappedClass.properties[$ property.name] = property;
 					}
 					
@@ -1612,7 +1636,7 @@ function CozyState(env) constructor {
 					{
 						var operatorName = classOperatorNames[i];
 						var operator = classOperators[$ operatorName];
-						
+						operator.owner = self;
 						wrappedClass.operators[$ operatorName] = operator;
 					}
 					
@@ -1962,7 +1986,7 @@ function CozyState(env) constructor {
 					if (!(is_cozyobject(object) or is_undefined(object)))
 						throw $"Cannot use instanceof on {typeof(object)} value";
 					
-					self.pushStack(class.objectIsInstance(object,self));
+					self.pushStack(class.objectIsInstance(object));
 					
 					break;
 				case COZY_INSTR.CLASSOF:

@@ -8,6 +8,13 @@
 #macro COZY_NAME_SET "__CozySet"
 #macro COZY_NAME_CANDELETE "__CozyCanDelete"
 
+/// @ignore
+function __cozylang_clear_struct(struct) {
+	var names = struct_get_names(struct);
+	for (var i = 0, n = array_length(names); i < n; i++)
+		struct_remove(struct,names[i]);
+}
+
 /// @param {String} name
 /// @param {Array<Any>|Function} bytecode
 function CozyLibrary(name,bytecode) constructor {
@@ -17,11 +24,18 @@ function CozyLibrary(name,bytecode) constructor {
 		bytecode;
 	self.children = {};
 	
+	self.exposedGlobals = {};
+	self.exposedConsts = {};
+	self.exposedDynamicConsts = {};
+	self.cached = false;
+	
+	self.libState = undefined;
+	
 	/// @param {String} name
 	/// @param {Struct.CozyLibrary} library
 	static addChild = function(name,library) {
 		if (struct_exists(self.children,name))
-			show_debug_message($"Overwriting already existing library \"{name}\" in library \"{self.name}\"");
+			show_debug_message($"Overwriting already existing sub-library \"{name}\" in library \"{self.name}\"");
 		self.children[$ name] = library;
 	}
 	
@@ -30,6 +44,50 @@ function CozyLibrary(name,bytecode) constructor {
 		if (!struct_exists(self.children,name))
 			return;
 		struct_remove(self.children,name);
+	}
+	
+	/// @ignore
+	static __libexpose_global = function(name,value) {
+		exposedGlobals[$ name] = value;
+	}
+	static __libexpose_const = function(name,value) {
+		if (struct_exists(exposedConsts,name) or struct_exists(exposedDynamicConsts,name))
+			throw $"Exposing a constant {name} that already exists in library";
+		exposedConsts[$ name] = value;
+	}
+	static __libexpose_dynconst = function(name,value) {
+		if (struct_exists(exposedConsts,name) or struct_exists(exposedDynamicConsts,name))
+			throw $"Exposing a constant {name} that already exists in library";
+		exposedDynamicConsts[$ name] = value;
+	}
+	
+	/// @param {Struct.CozyState} state
+	static checkCache = function(state) {
+		if (is_cozyfunc(self.func) and !self.cached)
+		{
+			__cozylang_clear_struct(self.exposedGlobals);
+			__cozylang_clear_struct(self.exposedConsts);
+			__cozylang_clear_struct(self.exposedDynamicConsts);
+			
+			if (is_undefined(self.libState))
+				self.libState = new CozyState(state.env);
+			var libexposeSelf = {
+				exposedGlobals : self.exposedGlobals,
+				exposedConsts : self.exposedConsts,
+				exposedDynamicConsts : self.exposedDynamicConsts
+			};
+			self.libState.consts[$ "libexpose_global"] = method(libexposeSelf,self.__libexpose_global);
+			self.libState.consts[$ "libexpose_const"] = method(libexposeSelf,self.__libexpose_const);
+			self.libState.consts[$ "libexpose_dynconst"] = method(libexposeSelf,self.__libexpose_dynconst);
+		
+			self.libState.runFunction(self.func);
+			
+			struct_remove(self.libState.consts,"libexpose_global");
+			struct_remove(self.libState.consts,"libexpose_const");
+			struct_remove(self.libState.consts,"libexpose_dynconst");
+			
+			self.cached = true;
+		}
 	}
 	
 	/// @param {Struct.CozyState} state
@@ -43,7 +101,41 @@ function CozyLibrary(name,bytecode) constructor {
 				self.children[$ childNames[i]].applyToState(state,true);
 		}
 		
-		// apply 
+		// apply
+		if (is_callable(self.func))
+		{
+			self.func(state);
+			return;
+		}
+		
+		self.checkCache(state);
+		
+		var globalNames = struct_get_names(self.exposedGlobals);
+		for (var i = 0, n = array_length(globalNames); i < n; i++)
+		{
+			var name = globalNames[i];
+			state.setGlobal(name,self.exposedGlobals[$ name]);
+		}
+		var constNames = struct_get_names(self.exposedConsts);
+		for (var i = 0, n = array_length(constNames); i < n; i++)
+		{
+			var name = constNames[i];
+			if (struct_exists(state.consts,name) or struct_exists(state.dynamicConsts,name))
+				throw $"Constant {name} from library {self.name} is already declared";
+			state.consts[$ name] = self.exposedConsts[$ name];
+		}
+		var dynConstNames = struct_get_names(self.exposedDynamicConsts);
+		for (var i = 0, n = array_length(dynConstNames); i < n; i++)
+		{
+			var name = dynConstNames[i];
+			if (struct_exists(state.consts,name) or struct_exists(state.dynamicConsts,name))
+				throw $"Constant {name} from library {self.name} is already declared";
+			state.dynamicConsts[$ name] = self.exposedDynamicConsts[$ name];
+		}
+		
+		
+		/*
+		/// old functionality
 		if (is_callable(self.func))
 		{
 			self.func(state);
@@ -51,6 +143,7 @@ function CozyLibrary(name,bytecode) constructor {
 		}
 		
 		state.runFunction(self.func);
+		*/
 	}
 }
 
@@ -122,7 +215,7 @@ function CozyLibraryBuilder(name) constructor {
 	}
 	/// @param {String} name
 	static addLibrary = function(name) {
-		self.__libraries[$ name] = new CozyObject();
+		self.__libraries[$ name] = new CozyObject(); /// not supplying anything is an issue
 		
 		return self;
 	}
@@ -209,6 +302,7 @@ function CozyDirective() constructor {
 	static modifyPostParse = function(directiveNode,node) {
 		if (self.modifyNodeChildren)
 		{
+			show_debug_message(node)
 			for (var i = 0, n = array_length(node.children); i < n; i++)
 				node.children[i] = self.modifyPostParse(directiveNode,node.children[i]);
 		}

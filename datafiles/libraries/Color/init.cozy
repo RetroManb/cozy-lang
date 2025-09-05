@@ -1,8 +1,9 @@
+import cozy.std;
 import cozy.types;
 import cozy.math;
 import cozy.string;
 
-const final class !Color {
+final class !Color {
 	property R {
 		{
 			return rawget(this,"R");
@@ -186,3 +187,5 @@ const final class !Color {
 		}
 	}
 }
+
+libexpose_const("Color",Color);
