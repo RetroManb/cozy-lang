@@ -3,8 +3,6 @@ import cozy.std;
 import Color;
 import SingletonTest;
 
-print(Singleton._instance);
-print(Singleton.GetInstance());
-print(Singleton._instance);
+print(Color.FromRGB(0.5,0,1) * Color.FromRGB(0.5,0.5,0.5));
 
-///print(Color.FromRGB(0.5,0,1) * Color.FromRGB(0.5,0.5,0.5));
+print(Singleton.GetInstance());

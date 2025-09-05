@@ -215,7 +215,7 @@ function CozyLibraryBuilder(name) constructor {
 	}
 	/// @param {String} name
 	static addLibrary = function(name) {
-		self.__libraries[$ name] = new CozyObject(); /// not supplying anything is an issue
+		self.__libraries[$ name] = new CozyObject(); /// not supplying anything is a potential issue
 		
 		return self;
 	}
