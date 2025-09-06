@@ -606,12 +606,15 @@ function __cozylang_expr_is_deterministic(node) {
 	return true;
 }
 
+#region Operators
+
 /// @ignore
 /// @param {Struct.CozyCompiler} compiler
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_add(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_add(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.ADD);
@@ -622,7 +625,8 @@ function __cozylang_op_infix_add(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_sub(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_sub(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.SUB);
@@ -633,7 +637,8 @@ function __cozylang_op_infix_sub(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_mul(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_mul(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.MUL);
@@ -644,7 +649,8 @@ function __cozylang_op_infix_mul(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_div(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_div(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.DIV);
@@ -655,7 +661,8 @@ function __cozylang_op_infix_div(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_mod(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_mod(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.MOD);
@@ -666,7 +673,8 @@ function __cozylang_op_infix_mod(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_power(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_power(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.POWER);
@@ -677,7 +685,8 @@ function __cozylang_op_infix_power(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_idiv(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_idiv(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.IDIV);
@@ -688,14 +697,14 @@ function __cozylang_op_infix_idiv(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_accessor(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_accessor(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	switch (rhsNode.type)
 	{
 		default:
 			throw $"Malformed accessor";
 		case COZY_NODE.IDENTIFIER:
-		case COZY_NODE.LITERAL:
 			bytecode.push(COZY_INSTR.PUSH_CONST);
 			bytecode.push(rhsNode.value);
 			break;
@@ -708,7 +717,8 @@ function __cozylang_op_infix_accessor(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_bracket_accessor(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_bracket_accessor(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.GET_PROPERTY);
@@ -719,7 +729,8 @@ function __cozylang_op_infix_bracket_accessor(compiler,bytecode,lhsNode,rhsNode)
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_equals(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_equals(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.EQUALS);
@@ -730,7 +741,8 @@ function __cozylang_op_infix_equals(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_notequals(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_notequals(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.EQUALS);
@@ -742,7 +754,8 @@ function __cozylang_op_infix_notequals(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_le_equals(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_le_equals(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.LESS_OR_EQUALS);
@@ -753,7 +766,8 @@ function __cozylang_op_infix_le_equals(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_gr_equals(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_gr_equals(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.GREATER_OR_EQUALS);
@@ -764,7 +778,8 @@ function __cozylang_op_infix_gr_equals(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_lesser(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_lesser(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.LESS_THAN);
@@ -775,7 +790,8 @@ function __cozylang_op_infix_lesser(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_greater(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_greater(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.GREATER_THAN);
@@ -786,7 +802,8 @@ function __cozylang_op_infix_greater(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_and(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_and(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.AND);
@@ -797,7 +814,8 @@ function __cozylang_op_infix_and(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_or(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_or(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.OR);
@@ -808,7 +826,8 @@ function __cozylang_op_infix_or(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_xor(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_xor(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.XOR);
@@ -819,7 +838,8 @@ function __cozylang_op_infix_xor(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_nullish(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_nullish(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.NULLISH);
@@ -830,7 +850,8 @@ function __cozylang_op_infix_nullish(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_band(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_band(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.BAND);
@@ -841,7 +862,8 @@ function __cozylang_op_infix_band(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_bor(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_bor(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.BOR);
@@ -852,7 +874,8 @@ function __cozylang_op_infix_bor(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_bxor(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_bxor(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.BXOR);
@@ -863,7 +886,8 @@ function __cozylang_op_infix_bxor(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_shift_left(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_shift_left(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.LSHIFT);
@@ -874,7 +898,8 @@ function __cozylang_op_infix_shift_left(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_shift_right(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_shift_right(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.RSHIFT);
@@ -885,7 +910,8 @@ function __cozylang_op_infix_shift_right(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_instanceof(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_instanceof(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.INSTANCEOF);
@@ -896,7 +922,8 @@ function __cozylang_op_infix_instanceof(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_is(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_is(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	compiler.compileExpression(rhsNode,bytecode);
 	bytecode.push(COZY_INSTR.IS);
@@ -907,11 +934,13 @@ function __cozylang_op_infix_is(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_assign(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_assign(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
 		compiler.compileExpression(rhsNode,bytecode);
+		
 		bytecode.push(COZY_INSTR.SET_VAR);
 		bytecode.push(targetInfo[0]);
 	}
@@ -929,7 +958,8 @@ function __cozylang_op_infix_assign(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_assign_add(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_assign_add(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
@@ -958,7 +988,8 @@ function __cozylang_op_infix_assign_add(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_assign_sub(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_assign_sub(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
@@ -987,7 +1018,8 @@ function __cozylang_op_infix_assign_sub(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_assign_mul(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_assign_mul(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
@@ -1016,7 +1048,8 @@ function __cozylang_op_infix_assign_mul(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_assign_div(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_assign_div(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
@@ -1045,7 +1078,8 @@ function __cozylang_op_infix_assign_div(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_assign_mod(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_assign_mod(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
@@ -1074,7 +1108,8 @@ function __cozylang_op_infix_assign_mod(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_assign_power(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_assign_power(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
@@ -1103,7 +1138,8 @@ function __cozylang_op_infix_assign_power(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_assign_idiv(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_assign_idiv(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
@@ -1132,7 +1168,8 @@ function __cozylang_op_infix_assign_idiv(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_assign_nullish(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_assign_nullish(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
@@ -1161,7 +1198,8 @@ function __cozylang_op_infix_assign_nullish(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_assign_shift_left(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_assign_shift_left(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
@@ -1190,7 +1228,8 @@ function __cozylang_op_infix_assign_shift_left(compiler,bytecode,lhsNode,rhsNode
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_assign_shift_right(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_assign_shift_right(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
@@ -1219,7 +1258,8 @@ function __cozylang_op_infix_assign_shift_right(compiler,bytecode,lhsNode,rhsNod
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_assign_band(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_assign_band(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
@@ -1248,7 +1288,8 @@ function __cozylang_op_infix_assign_band(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_assign_bor(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_assign_bor(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
@@ -1277,7 +1318,8 @@ function __cozylang_op_infix_assign_bor(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Struct.CozyNode} rhsNode
-function __cozylang_op_infix_assign_bxor(compiler,bytecode,lhsNode,rhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_infix_assign_bxor(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
 	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
@@ -1305,7 +1347,8 @@ function __cozylang_op_infix_assign_bxor(compiler,bytecode,lhsNode,rhsNode) {
 /// @param {Struct.CozyCompiler} compiler
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
-function __cozylang_op_prefix_plus(compiler,bytecode,lhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_prefix_plus(compiler,bytecode,lhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	bytecode.push(COZY_INSTR.POSITIVE);
 }
@@ -1314,7 +1357,8 @@ function __cozylang_op_prefix_plus(compiler,bytecode,lhsNode) {
 /// @param {Struct.CozyCompiler} compiler
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
-function __cozylang_op_prefix_minus(compiler,bytecode,lhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_prefix_minus(compiler,bytecode,lhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	bytecode.push(COZY_INSTR.NEGATE);
 }
@@ -1323,7 +1367,8 @@ function __cozylang_op_prefix_minus(compiler,bytecode,lhsNode) {
 /// @param {Struct.CozyCompiler} compiler
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
-function __cozylang_op_prefix_not(compiler,bytecode,lhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_prefix_not(compiler,bytecode,lhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	bytecode.push(COZY_INSTR.NOT);
 }
@@ -1332,7 +1377,8 @@ function __cozylang_op_prefix_not(compiler,bytecode,lhsNode) {
 /// @param {Struct.CozyCompiler} compiler
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
-function __cozylang_op_prefix_bnot(compiler,bytecode,lhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_prefix_bnot(compiler,bytecode,lhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	bytecode.push(COZY_INSTR.BNOT);
 }
@@ -1341,7 +1387,8 @@ function __cozylang_op_prefix_bnot(compiler,bytecode,lhsNode) {
 /// @param {Struct.CozyCompiler} compiler
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
-function __cozylang_op_prefix_question(compiler,bytecode,lhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_prefix_question(compiler,bytecode,lhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	bytecode.push(COZY_INSTR.BOOL_COERCE);
 }
@@ -1350,21 +1397,23 @@ function __cozylang_op_prefix_question(compiler,bytecode,lhsNode) {
 /// @param {Struct.CozyCompiler} compiler
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
-function __cozylang_op_prefix_delete(compiler,bytecode,lhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_prefix_delete(compiler,bytecode,lhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	bytecode.push(COZY_INSTR.DELETE_OBJECT);
 	
 	__cozylang_op_infix_assign(compiler,bytecode,lhsNode,new CozyNode(
 		COZY_NODE.LITERAL,
 		undefined
-	));
+	),0);
 }
 
 /// @ignore
 /// @param {Struct.CozyCompiler} compiler
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
-function __cozylang_op_prefix_classof(compiler,bytecode,lhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_prefix_classof(compiler,bytecode,lhsNode,callReturnCount) {
 	compiler.compileExpression(lhsNode,bytecode);
 	bytecode.push(COZY_INSTR.CLASSOF);
 }
@@ -1373,7 +1422,8 @@ function __cozylang_op_prefix_classof(compiler,bytecode,lhsNode) {
 /// @param {Struct.CozyCompiler} compiler
 /// @param {Struct.CozyBytecode} bytecode
 /// @param {Struct.CozyNode} lhsNode
-function __cozylang_op_prefix_inc(compiler,bytecode,lhsNode) {
+/// @param {Real} callReturnCount
+function __cozylang_op_prefix_inc(compiler,bytecode,lhsNode,callReturnCount) {
 	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
@@ -1392,6 +1442,8 @@ function __cozylang_op_prefix_inc(compiler,bytecode,lhsNode) {
 		bytecode.push(array_last(targetInfo));
 	}
 }
+
+#endregion
 
 /// @ignore
 /// @param {Array<Any>} bytecode
@@ -3060,13 +3112,13 @@ function CozyCompiler(env) constructor {
 				bodyInfo.pushStackOnReturn = false;
 				break;
 			case COZY_NODE.BIN_OPERATOR:
-				self.env.infixOpCompilers[$ expressionNode.value](self,bytecode,expressionNode.children[0],expressionNode.children[1]);
+				self.env.infixOpCompilers[$ expressionNode.value](self,bytecode,expressionNode.children[0],expressionNode.children[1],callReturnCount);
 				break;
 			case COZY_NODE.PRE_OPERATOR:
-				self.env.prefixOpCompilers[$ expressionNode.value](self,bytecode,expressionNode.children[0]);
+				self.env.prefixOpCompilers[$ expressionNode.value](self,bytecode,expressionNode.children[0],callReturnCount);
 				break;
 			case COZY_NODE.POST_OPERATOR:
-				self.env.postfixOpCompilers[$ expressionNode.value](self,bytecode,expressionNode.children[0]);
+				self.env.postfixOpCompilers[$ expressionNode.value](self,bytecode,expressionNode.children[0],callReturnCount);
 				break;
 			case COZY_NODE.IDENTIFIER:
 				bytecode.push(COZY_INSTR.GET_VAR);
