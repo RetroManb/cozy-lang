@@ -1538,7 +1538,6 @@ function CozyState(env) constructor {
 					var value = self.popStack();
 					var name = self.popStack();
 					var object = self.popStack();
-					show_debug_message(value);
 					
 					self.setProperty(object,name,value);
 					break;

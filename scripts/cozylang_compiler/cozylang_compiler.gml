@@ -2874,7 +2874,6 @@ function CozyCompiler(env) constructor {
 		}
 		else
 		{
-			show_debug_message(constructorNode);
 			self.compileFunc(constructorNode,bytecode,$"{className}.constructor",[COZY_SELF_NAME]);
 			bytecode.pop();
 			bytecode.pop();

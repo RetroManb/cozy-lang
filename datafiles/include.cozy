@@ -1,5 +1,5 @@
 import cozy.std;
 
-#include "include_included.cozy"
+#include "./include_included.cozy"
 
 print(HEY_INCLUDE);

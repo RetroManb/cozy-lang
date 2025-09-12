@@ -432,6 +432,36 @@ function CozyEnvironment() constructor {
 			throw exception;
 	}
 	
+	static getPath = function(path,current="") {
+		path = string_replace_all(path,"/","\\");
+		current = string_replace_all(current,"/","\\");
+		
+		var split = string_split(path,"\\");
+		var arr = string_split(current,"\\");
+		
+		for (var i = 0, n = array_length(split); i < n; i++)
+		{
+			var name = split[i];
+			
+			switch (name)
+			{
+				default:
+					if (i == 0)
+						array_resize(arr,0);
+					
+					array_push(arr,name);
+					break;
+				case ".":
+					break;
+				case "..":
+					array_pop(arr);
+					break;
+			}
+		}
+		
+		return __cozylang_concat(arr,"\\");
+	}
+	
 	/// restrictions
 	self.bannedNames = [
 		"toString",

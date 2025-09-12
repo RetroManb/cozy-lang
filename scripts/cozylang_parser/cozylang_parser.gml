@@ -196,7 +196,7 @@ function __cozylang_directive_include_parse(parser,lexer,directiveNode) {
 /// @param {Struct.CozyNode} directiveNode
 /// @param {Struct.CozyLexer} lexer
 function __cozylang_directive_include_modifyTokens(directiveNode,lexer) {
-	var filepath = directiveNode.children[0].value;
+	var filepath = lexer.env.getPath(directiveNode.children[0].value,filename_dir(lexer.lastFilepath));
 	if (!lexer.env.fileExists(filepath))
 	{
 		lexer.env.stderrWriteLine($"Couldn't include file {filepath}");

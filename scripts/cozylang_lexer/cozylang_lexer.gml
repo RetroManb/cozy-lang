@@ -165,9 +165,12 @@ function CozyLexer(env) constructor {
 	self.operatorTokens = {};
 	self.operatorTokens[$ "=>"] = COZY_TOKEN.LAMBDA_OPERATOR;
 	
+	self.lastFilepath = "";
+	
 	static reset = function() {
 		array_resize(self.tokens,0);
 		self.resetToStart();
+		self.lastFilepath = "";
 	}
 	
 	/// @param {Enum.COZY_TOKEN} type
@@ -584,7 +587,10 @@ function CozyLexer(env) constructor {
 		codeString = buffer_read(buffer,buffer_string);
 		buffer_delete(buffer);
 		
-		return self.tokenizeString(codeString);
+		var res = self.tokenizeString(codeString);
+		self.lastFilepath = path;
+		
+		return res;
 	}
 	
 	/// @returns {Bool}
