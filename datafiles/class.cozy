@@ -47,6 +47,8 @@ class MyClass : TestParent {
 	
 	constructor() {
 		this._hello = "World";
+		
+		print(this);
 	}
 	/// this is ONLY called when the ` delete ` keyword is used, not on garbage collection, be weary...
 	destructor {
@@ -67,10 +69,7 @@ class TestChild {
 
 local obj = new MyClass();
 
-print(classof obj);
-print(obj.Hello);
-print(obj._hello);
-print(obj.blue);
+obj.MyFunc();
 
 delete obj;
 

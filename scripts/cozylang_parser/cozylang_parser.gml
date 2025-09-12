@@ -1227,6 +1227,17 @@ function CozyParser(env) constructor {
 				
 				node = result.node;
 				break;
+			case COZY_TOKEN.CONSTRUCTOR:
+				var result = self.parseClassStatement(lexer);
+				
+				var modifiersNode = result.node.children[array_length(result.node.children)-1];
+				modifiersNode.addChild(new CozyNode(
+					COZY_NODE.MODIFIER,
+					modifier
+				));
+				
+				node = result.node;
+				break;
 			case COZY_TOKEN.MODIFIER:
 				lexer.next();
 				var result = self.parseClassModifier(lexer,next.value);
@@ -1279,6 +1290,10 @@ function CozyParser(env) constructor {
 		var bodyNode = self.parseBody(lexer);
 		
 		constructorNode.addChild(bodyNode);
+		constructorNode.addChild(new CozyNode(
+			COZY_NODE.MODIFIERS,
+			undefined
+		));
 		
 		return constructorNode;
 	}

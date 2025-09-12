@@ -334,6 +334,7 @@ function CozyBytecode() constructor {
 						i++;
 						break;
 					case COZY_INSTR.PUSH_STACK_TOP:
+					case COZY_INSTR.SWAP_STACK_TOP:
 						break;
 					case COZY_INSTR.SET_LOCAL:
 					case COZY_INSTR.REMOVE_LOCAL:
@@ -367,7 +368,6 @@ function CozyBytecode() constructor {
 						i++;
 						break;
 					case COZY_INSTR.DELETE_OBJECT:
-						break;
 					case COZY_INSTR.BOOL_COERCE:
 						break;
 					case COZY_INSTR.WRAP_CLASS:
@@ -377,6 +377,8 @@ function CozyBytecode() constructor {
 					case COZY_INSTR.PUSH_STACKFLAG:
 						buffer_write(buffer,buffer_u8,value);
 						i++;
+						break;
+					case COZY_INSTR.CLASS_INIT_STATIC:
 						break;
 				}
 			}
@@ -501,6 +503,7 @@ function CozyBytecode() constructor {
 					addConstOffset();
 					break;
 				case COZY_INSTR.PUSH_STACK_TOP:
+				case COZY_INSTR.SWAP_STACK_TOP:
 					break;
 				case COZY_INSTR.SET_LOCAL:
 				case COZY_INSTR.REMOVE_LOCAL:
@@ -531,7 +534,6 @@ function CozyBytecode() constructor {
 					self.push(bool(buffer_read(buffer,buffer_u8)));
 					break;
 				case COZY_INSTR.DELETE_OBJECT:
-					break;
 				case COZY_INSTR.BOOL_COERCE:
 					break;
 				case COZY_INSTR.WRAP_CLASS:
@@ -539,6 +541,8 @@ function CozyBytecode() constructor {
 					break;
 				case COZY_INSTR.PUSH_STACKFLAG:
 					self.push(buffer_read(buffer,buffer_u8));
+					break;
+				case COZY_INSTR.CLASS_INIT_STATIC:
 					break;
 			}
 		}
@@ -960,7 +964,7 @@ function __cozylang_op_infix_assign(compiler,bytecode,lhsNode,rhsNode,callReturn
 /// @param {Struct.CozyNode} rhsNode
 /// @param {Real} callReturnCount
 function __cozylang_op_infix_assign_add(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
-	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
+	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode,true);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
 		bytecode.push(COZY_INSTR.GET_VAR);
@@ -979,6 +983,7 @@ function __cozylang_op_infix_assign_add(compiler,bytecode,lhsNode,rhsNode,callRe
 		
 		bytecode.push(COZY_INSTR.PUSH_CONST);
 		bytecode.push(array_last(targetInfo));
+		bytecode.push(COZY_INSTR.SWAP_STACK_TOP);
 		bytecode.push(COZY_INSTR.SET_PROPERTY);
 	}
 }
@@ -990,7 +995,7 @@ function __cozylang_op_infix_assign_add(compiler,bytecode,lhsNode,rhsNode,callRe
 /// @param {Struct.CozyNode} rhsNode
 /// @param {Real} callReturnCount
 function __cozylang_op_infix_assign_sub(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
-	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
+	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode,true);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
 		bytecode.push(COZY_INSTR.GET_VAR);
@@ -1009,6 +1014,7 @@ function __cozylang_op_infix_assign_sub(compiler,bytecode,lhsNode,rhsNode,callRe
 		
 		bytecode.push(COZY_INSTR.PUSH_CONST);
 		bytecode.push(array_last(targetInfo));
+		bytecode.push(COZY_INSTR.SWAP_STACK_TOP);
 		bytecode.push(COZY_INSTR.SET_PROPERTY);
 	}
 }
@@ -1020,7 +1026,7 @@ function __cozylang_op_infix_assign_sub(compiler,bytecode,lhsNode,rhsNode,callRe
 /// @param {Struct.CozyNode} rhsNode
 /// @param {Real} callReturnCount
 function __cozylang_op_infix_assign_mul(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
-	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
+	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode,true);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
 		bytecode.push(COZY_INSTR.GET_VAR);
@@ -1039,6 +1045,7 @@ function __cozylang_op_infix_assign_mul(compiler,bytecode,lhsNode,rhsNode,callRe
 		
 		bytecode.push(COZY_INSTR.PUSH_CONST);
 		bytecode.push(array_last(targetInfo));
+		bytecode.push(COZY_INSTR.SWAP_STACK_TOP);
 		bytecode.push(COZY_INSTR.SET_PROPERTY);
 	}
 }
@@ -1050,7 +1057,7 @@ function __cozylang_op_infix_assign_mul(compiler,bytecode,lhsNode,rhsNode,callRe
 /// @param {Struct.CozyNode} rhsNode
 /// @param {Real} callReturnCount
 function __cozylang_op_infix_assign_div(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
-	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
+	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode,true);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
 		bytecode.push(COZY_INSTR.GET_VAR);
@@ -1069,6 +1076,7 @@ function __cozylang_op_infix_assign_div(compiler,bytecode,lhsNode,rhsNode,callRe
 		
 		bytecode.push(COZY_INSTR.PUSH_CONST);
 		bytecode.push(array_last(targetInfo));
+		bytecode.push(COZY_INSTR.SWAP_STACK_TOP);
 		bytecode.push(COZY_INSTR.SET_PROPERTY);
 	}
 }
@@ -1080,7 +1088,7 @@ function __cozylang_op_infix_assign_div(compiler,bytecode,lhsNode,rhsNode,callRe
 /// @param {Struct.CozyNode} rhsNode
 /// @param {Real} callReturnCount
 function __cozylang_op_infix_assign_mod(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
-	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
+	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode,true);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
 		bytecode.push(COZY_INSTR.GET_VAR);
@@ -1099,6 +1107,7 @@ function __cozylang_op_infix_assign_mod(compiler,bytecode,lhsNode,rhsNode,callRe
 		
 		bytecode.push(COZY_INSTR.PUSH_CONST);
 		bytecode.push(array_last(targetInfo));
+		bytecode.push(COZY_INSTR.SWAP_STACK_TOP);
 		bytecode.push(COZY_INSTR.SET_PROPERTY);
 	}
 }
@@ -1110,7 +1119,7 @@ function __cozylang_op_infix_assign_mod(compiler,bytecode,lhsNode,rhsNode,callRe
 /// @param {Struct.CozyNode} rhsNode
 /// @param {Real} callReturnCount
 function __cozylang_op_infix_assign_power(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
-	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
+	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode,true);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
 		bytecode.push(COZY_INSTR.GET_VAR);
@@ -1129,6 +1138,7 @@ function __cozylang_op_infix_assign_power(compiler,bytecode,lhsNode,rhsNode,call
 		
 		bytecode.push(COZY_INSTR.PUSH_CONST);
 		bytecode.push(array_last(targetInfo));
+		bytecode.push(COZY_INSTR.SWAP_STACK_TOP);
 		bytecode.push(COZY_INSTR.SET_PROPERTY);
 	}
 }
@@ -1140,7 +1150,7 @@ function __cozylang_op_infix_assign_power(compiler,bytecode,lhsNode,rhsNode,call
 /// @param {Struct.CozyNode} rhsNode
 /// @param {Real} callReturnCount
 function __cozylang_op_infix_assign_idiv(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
-	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
+	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode,true);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
 		bytecode.push(COZY_INSTR.GET_VAR);
@@ -1159,6 +1169,7 @@ function __cozylang_op_infix_assign_idiv(compiler,bytecode,lhsNode,rhsNode,callR
 		
 		bytecode.push(COZY_INSTR.PUSH_CONST);
 		bytecode.push(array_last(targetInfo));
+		bytecode.push(COZY_INSTR.SWAP_STACK_TOP);
 		bytecode.push(COZY_INSTR.SET_PROPERTY);
 	}
 }
@@ -1170,7 +1181,7 @@ function __cozylang_op_infix_assign_idiv(compiler,bytecode,lhsNode,rhsNode,callR
 /// @param {Struct.CozyNode} rhsNode
 /// @param {Real} callReturnCount
 function __cozylang_op_infix_assign_nullish(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
-	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
+	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode,true);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
 		bytecode.push(COZY_INSTR.GET_VAR);
@@ -1189,6 +1200,7 @@ function __cozylang_op_infix_assign_nullish(compiler,bytecode,lhsNode,rhsNode,ca
 		
 		bytecode.push(COZY_INSTR.PUSH_CONST);
 		bytecode.push(array_last(targetInfo));
+		bytecode.push(COZY_INSTR.SWAP_STACK_TOP);
 		bytecode.push(COZY_INSTR.SET_PROPERTY);
 	}
 }
@@ -1200,7 +1212,7 @@ function __cozylang_op_infix_assign_nullish(compiler,bytecode,lhsNode,rhsNode,ca
 /// @param {Struct.CozyNode} rhsNode
 /// @param {Real} callReturnCount
 function __cozylang_op_infix_assign_shift_left(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
-	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
+	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode,true);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
 		bytecode.push(COZY_INSTR.GET_VAR);
@@ -1209,6 +1221,8 @@ function __cozylang_op_infix_assign_shift_left(compiler,bytecode,lhsNode,rhsNode
 		compiler.compileExpression(rhsNode,bytecode);
 		bytecode.push(COZY_INSTR.LSHIFT);
 		
+		bytecode.push(COZY_INSTR.PUSH_CONST);
+		bytecode.push(array_last(targetInfo));
 		bytecode.push(COZY_INSTR.SET_VAR);
 		bytecode.push(targetInfo[0]);
 	}
@@ -1219,6 +1233,7 @@ function __cozylang_op_infix_assign_shift_left(compiler,bytecode,lhsNode,rhsNode
 		
 		bytecode.push(COZY_INSTR.PUSH_CONST);
 		bytecode.push(array_last(targetInfo));
+		bytecode.push(COZY_INSTR.SWAP_STACK_TOP);
 		bytecode.push(COZY_INSTR.SET_PROPERTY);
 	}
 }
@@ -1230,7 +1245,7 @@ function __cozylang_op_infix_assign_shift_left(compiler,bytecode,lhsNode,rhsNode
 /// @param {Struct.CozyNode} rhsNode
 /// @param {Real} callReturnCount
 function __cozylang_op_infix_assign_shift_right(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
-	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
+	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode,true);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
 		bytecode.push(COZY_INSTR.GET_VAR);
@@ -1249,6 +1264,7 @@ function __cozylang_op_infix_assign_shift_right(compiler,bytecode,lhsNode,rhsNod
 		
 		bytecode.push(COZY_INSTR.PUSH_CONST);
 		bytecode.push(array_last(targetInfo));
+		bytecode.push(COZY_INSTR.SWAP_STACK_TOP);
 		bytecode.push(COZY_INSTR.SET_PROPERTY);
 	}
 }
@@ -1260,7 +1276,7 @@ function __cozylang_op_infix_assign_shift_right(compiler,bytecode,lhsNode,rhsNod
 /// @param {Struct.CozyNode} rhsNode
 /// @param {Real} callReturnCount
 function __cozylang_op_infix_assign_band(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
-	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
+	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode,true);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
 		bytecode.push(COZY_INSTR.GET_VAR);
@@ -1275,10 +1291,11 @@ function __cozylang_op_infix_assign_band(compiler,bytecode,lhsNode,rhsNode,callR
 	else if (array_length(targetInfo) > 1) // <identifier>.<identifier> = <expression>
 	{
 		compiler.compileExpression(rhsNode,bytecode);
-		bytecode.push(COZY_INSTR.RSHIFT);
+		bytecode.push(COZY_INSTR.BAND);
 		
 		bytecode.push(COZY_INSTR.PUSH_CONST);
 		bytecode.push(array_last(targetInfo));
+		bytecode.push(COZY_INSTR.SWAP_STACK_TOP);
 		bytecode.push(COZY_INSTR.SET_PROPERTY);
 	}
 }
@@ -1290,7 +1307,7 @@ function __cozylang_op_infix_assign_band(compiler,bytecode,lhsNode,rhsNode,callR
 /// @param {Struct.CozyNode} rhsNode
 /// @param {Real} callReturnCount
 function __cozylang_op_infix_assign_bor(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
-	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
+	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode,true);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
 		bytecode.push(COZY_INSTR.GET_VAR);
@@ -1305,10 +1322,11 @@ function __cozylang_op_infix_assign_bor(compiler,bytecode,lhsNode,rhsNode,callRe
 	else if (array_length(targetInfo) > 1) // <identifier>.<identifier> = <expression>
 	{
 		compiler.compileExpression(rhsNode,bytecode);
-		bytecode.push(COZY_INSTR.RSHIFT);
+		bytecode.push(COZY_INSTR.BOR);
 		
 		bytecode.push(COZY_INSTR.PUSH_CONST);
 		bytecode.push(array_last(targetInfo));
+		bytecode.push(COZY_INSTR.SWAP_STACK_TOP);
 		bytecode.push(COZY_INSTR.SET_PROPERTY);
 	}
 }
@@ -1320,7 +1338,7 @@ function __cozylang_op_infix_assign_bor(compiler,bytecode,lhsNode,rhsNode,callRe
 /// @param {Struct.CozyNode} rhsNode
 /// @param {Real} callReturnCount
 function __cozylang_op_infix_assign_bxor(compiler,bytecode,lhsNode,rhsNode,callReturnCount) {
-	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
+	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode,true);
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
 		bytecode.push(COZY_INSTR.GET_VAR);
@@ -1335,10 +1353,9 @@ function __cozylang_op_infix_assign_bxor(compiler,bytecode,lhsNode,rhsNode,callR
 	else if (array_length(targetInfo) > 1) // <identifier>.<identifier> = <expression>
 	{
 		compiler.compileExpression(rhsNode,bytecode);
-		bytecode.push(COZY_INSTR.RSHIFT);
+		bytecode.push(COZY_INSTR.BXOR);
 		
-		bytecode.push(COZY_INSTR.PUSH_CONST);
-		bytecode.push(array_last(targetInfo));
+		bytecode.push(COZY_INSTR.SWAP_STACK_TOP);
 		bytecode.push(COZY_INSTR.SET_PROPERTY);
 	}
 }
@@ -1424,7 +1441,8 @@ function __cozylang_op_prefix_classof(compiler,bytecode,lhsNode,callReturnCount)
 /// @param {Struct.CozyNode} lhsNode
 /// @param {Real} callReturnCount
 function __cozylang_op_prefix_inc(compiler,bytecode,lhsNode,callReturnCount) {
-	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode);
+	var targetInfo = compiler.compileAssignGetTarget(lhsNode,bytecode,true);
+	/// needs reworked
 	if (array_length(targetInfo) == 1) // <identifier> = <expression>
 	{
 		bytecode.push(COZY_INSTR.PUSH_CONST);
@@ -1603,6 +1621,9 @@ function __cozylang_debug_disassemble(bytecode) {
 			case COZY_INSTR.PUSH_STACK_TOP:
 				line = $"PUSH_STACK_TOP\n";
 				break;
+			case COZY_INSTR.SWAP_STACK_TOP:
+				line = $"SWAP_STACK_TOP\n";
+				break;
 			case COZY_INSTR.SET_LOCAL:
 				var name = bytecode[i+1];
 				
@@ -1686,6 +1707,9 @@ function __cozylang_debug_disassemble(bytecode) {
 				
 				line = $"PUSH_STACKFLAG {value}\n";
 				i++;
+				break;
+			case COZY_INSTR.CLASS_INIT_STATIC:
+				line = $"CLASS_INIT_STATIC\n";
 				break;
 		}
 		
@@ -1858,6 +1882,8 @@ function CozyCompiler(env) constructor {
 		bytecode.push(COZY_INSTR.SET_LOCAL);
 		bytecode.push(localNode.value);
 		
+		bytecode.push(COZY_INSTR.CLASS_INIT_STATIC);
+		
 		return {
 			localsCreated : [localNode.value],
 		};
@@ -1895,6 +1921,8 @@ function CozyCompiler(env) constructor {
 		bytecode.pop();
 		bytecode.push(COZY_INSTR.MAKE_CONST);
 		bytecode.push(constNode.value);
+		
+		bytecode.push(COZY_INSTR.CLASS_INIT_STATIC);
 	}
 	
 	/// @param {Struct.CozyNode} localNode
@@ -1948,6 +1976,8 @@ function CozyCompiler(env) constructor {
 		bytecode.pop();
 		bytecode.push(COZY_INSTR.MAKE_LOCAL_CONST);
 		bytecode.push(localNode.value);
+		
+		bytecode.push(COZY_INSTR.CLASS_INIT_STATIC);
 		
 		return {
 			localsCreated : [localNode.value],
@@ -2545,11 +2575,14 @@ function CozyCompiler(env) constructor {
 		
 		var modifiers = modifiersNode.getAllChildrenValues();
 		
+		var staticConstructorNode = undefined;
 		var constructorNode = undefined;
 		var destructorNode = undefined;
 		var funcNodes = [];
 		var propertyNodes = [];
 		var operatorNodes = [];
+		
+		var classIsStatic = array_get_index(modifiers,"static") >= 0;
 		
 		/// find nodes
 		for (var i = 3, n = array_length(classNode.children); i < n; i++)
@@ -2562,11 +2595,24 @@ function CozyCompiler(env) constructor {
 					if (!is_undefined(constructorNode))
 						throw $"Duplicate constructor found in class {className}";
 					
+					var constructorModifiers = node.children[2].getAllChildrenValues();
+					
+					if (array_get_index(constructorModifiers,"static") >= 0)
+					{
+						staticConstructorNode = node;
+						break;
+					}
+					else if (classIsStatic)
+						throw $"Non-static constructor found in static class {className}";
+					
 					constructorNode = node;
 					break;
 				case COZY_NODE.CLASS_DESTRUCTOR:
 					if (!is_undefined(destructorNode))
 						throw $"Duplicate destructor found in class {className}";
+					
+					if (classIsStatic)
+						throw $"Destructor found in static class {className}";
 					
 					destructorNode = node;
 					break;
@@ -2657,6 +2703,9 @@ function CozyCompiler(env) constructor {
 			var propName = propertyNode.value;
 			var propGetter = undefined;
 			var propSetter = undefined;
+			
+			if (classIsStatic and !isStatic)
+				throw $"Non-static property {propName} found in static class {className}";
 			
 			for (var j = 2, n2 = array_length(propertyNode.children); j < n2; j++)
 			{
@@ -2766,6 +2815,9 @@ function CozyCompiler(env) constructor {
 			var argNames = [COZY_SELF_NAME];
 			var fnHasParams = false;
 			
+			if (classIsStatic and !isStatic)
+				throw $"Non-static function {fnName} found in static class {className}";
+			
 			for (var j = 0, n2 = array_length(argsNode.children); j < n2; j++)
 			{
 				var argNode = argsNode.children[j];
@@ -2822,7 +2874,21 @@ function CozyCompiler(env) constructor {
 		}
 		else
 		{
+			show_debug_message(constructorNode);
 			self.compileFunc(constructorNode,bytecode,$"{className}.constructor",[COZY_SELF_NAME]);
+			bytecode.pop();
+			bytecode.pop();
+		}
+		
+		/// static constructor
+		if (is_undefined(staticConstructorNode))
+		{
+			bytecode.push(COZY_INSTR.PUSH_CONST);
+			bytecode.push(undefined);
+		}
+		else
+		{
+			self.compileFunc(staticConstructorNode,bytecode,$"{className}.static constructor",[COZY_SELF_NAME]);
 			bytecode.pop();
 			bytecode.pop();
 		}
@@ -2835,6 +2901,7 @@ function CozyCompiler(env) constructor {
 		bytecode.push(modifiers);
 		bytecode.push(COZY_INSTR.WRAP_CLASS);
 		bytecode.push(className);
+		bytecode.push(COZY_INSTR.PUSH_STACK_TOP);
 		bytecode.push(COZY_INSTR.SET_VAR);
 		bytecode.push(className);
 	}
@@ -2981,6 +3048,8 @@ function CozyCompiler(env) constructor {
 				break;
 			case COZY_NODE.CLASS:
 				self.compileClass(statementNode,bytecode);
+				
+				bytecode.push(COZY_INSTR.CLASS_INIT_STATIC);
 				break;
 			case COZY_NODE.RETURN:
 				var returnRes = self.compileReturn(statementNode,bytecode);
@@ -3214,14 +3283,15 @@ function CozyCompiler(env) constructor {
 	
 	/// @param {Struct.CozyNode} expressionNode
 	/// @param {Struct.CozyBytecode} bytecode
+	/// @param {BooL} modifying
 	/// @returns {Array<Any>}
-	static compileAssignGetTarget = function(expressionNode,bytecode,__top=true) {
+	static compileAssignGetTarget = function(expressionNode,bytecode,modifying=false,__top=true) {
 		switch (expressionNode.type)
 		{
 			default:
 				throw $"Malformed assignment";
 			case COZY_NODE.BIN_OPERATOR:
-				if (expressionNode.value != ".")
+				if (expressionNode.value != "." and expressionNode.value != "[")
 					throw $"Malformed assignment";
 				
 				var lhs = expressionNode.children[0];
@@ -3234,7 +3304,7 @@ function CozyCompiler(env) constructor {
 					default:
 						throw $"Malformed assignment";
 					case COZY_NODE.BIN_OPERATOR:
-						targetInfo = self.compileAssignGetTarget(lhs,bytecode,false);
+						targetInfo = self.compileAssignGetTarget(lhs,bytecode,modifying,false);
 						break;
 					case COZY_NODE.IDENTIFIER:
 						bytecode.push(COZY_INSTR.GET_VAR);
@@ -3249,6 +3319,10 @@ function CozyCompiler(env) constructor {
 						throw $"Malformed assignment";
 					case COZY_NODE.IDENTIFIER:
 					case COZY_NODE.LITERAL:
+						if (modifying and __top)
+						{
+							bytecode.push(COZY_INSTR.PUSH_STACK_TOP);
+						}
 						bytecode.push(COZY_INSTR.PUSH_CONST);
 						bytecode.push(rhs.value);
 						bytecode.push(COZY_INSTR.GET_PROPERTY);

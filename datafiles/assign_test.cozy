@@ -1,0 +1,14 @@
+import cozy.std;
+import cozy.array;
+
+local value = array.New(8);
+
+print(value);
+
+value[0] = 1;
+
+print(value);
+
+value[0] += 3;
+
+print(value);

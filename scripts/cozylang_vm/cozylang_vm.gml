@@ -34,7 +34,7 @@ enum COZY_INSTR {
 	SET_VAR = 32,
 	GET_VAR = 33,
 	PUSH_STACK_TOP = 34,
-	UNUSED_23 = 35,
+	SWAP_STACK_TOP = 35,
 	SET_LOCAL = 36,
 	UNUSED_25 = 37,
 	REMOVE_LOCAL = 38,
@@ -62,7 +62,7 @@ enum COZY_INSTR {
 	BOOL_COERCE = 60,
 	WRAP_CLASS = 61,
 	PUSH_STACKFLAG = 62,
-	UNUSED_3F = 63,
+	CLASS_INIT_STATIC = 63,
 	__SIZE__ = 64,
 }
 
@@ -76,6 +76,7 @@ enum COZY_STACKFLAG {
 }
 
 /// @param {String} name
+/// @param {Function|Struct.CozyFunction} staticConstructorFn
 /// @param {Function|Struct.CozyFunction} constructorFn
 /// @param {Function|Struct.CozyFunction} destructorFn
 /// @param {String} parentName
@@ -84,8 +85,11 @@ enum COZY_STACKFLAG {
 /// @param {Struct} statics
 /// @param {Struct} staticProperties
 /// @param {Struct.CozyState} owner
-function CozyClass(name,constructorFn=undefined,destructorFn=undefined,parentName="",isStrict=false,modifiers=[],statics={},staticProperties={},owner=undefined) constructor {
+function CozyClass(name,staticConstructorFn=undefined,constructorFn=undefined,destructorFn=undefined,parentName="",isStrict=false,modifiers=[],statics={},staticProperties={},owner=undefined) constructor {
 	self.name = name;
+	self.staticConstructorFn = is_callable(staticConstructorFn) ?
+		method(undefined,staticConstructorFn) :
+		staticConstructorFn;
 	self.constructorFn = is_callable(constructorFn) ?
 		method(undefined,constructorFn) :
 		constructorFn;
@@ -103,26 +107,37 @@ function CozyClass(name,constructorFn=undefined,destructorFn=undefined,parentNam
 	
 	self.owner = owner;
 	
-	/// static property initializers
-	var staticNames = struct_get_names(self.staticProperties);
-	for (var i = 0, n = array_length(staticNames); i < n; i++)
-	{
-		var staticName = staticNames[i];
-		var value = self.staticProperties[$ staticName];
+	static staticInit = function() {
+		if (self.hasModifier("static") and self.hasModifier("final"))
+			throw $"Class {self.name} was given static and final modifiers";
 		
-		if (is_cozyproperty(value) and cozylang_is_callable(value.initializer))
+		/// static property initializers
+		var staticNames = struct_get_names(self.staticProperties);
+		for (var i = 0, n = array_length(staticNames); i < n; i++)
 		{
-			var result = cozylang_execute(value.initializer,[],array_last(global.cozylang.stateStack));
+			var staticName = staticNames[i];
+			var value = self.staticProperties[$ staticName];
+		
+			if (is_cozyproperty(value) and cozylang_is_callable(value.initializer))
+			{
+				var result = cozylang_execute(value.initializer,[],self.owner);
 			
-			if (!result[0])
-				continue;
-			if (array_length(result) == 1)
-				throw $"Static property {staticName} initializer didn't return anything";
+				if (!result[0])
+					continue;
+				if (array_length(result) == 1)
+					throw $"Static property {staticName} initializer didn't return anything";
 			
-			self.statics[$ staticName] = result[1];
+				self.statics[$ staticName] = result[1];
+			}
+			else
+				self.statics[$ staticName] = undefined;
 		}
-		else
-			self.statics[$ staticName] = undefined;
+		
+		/// static constructor
+		if (cozylang_is_callable(self.staticConstructorFn))
+		{
+			cozylang_execute(self.staticConstructorFn,[],self.owner);
+		}
 	}
 	
 	static hasModifier = function(name) {
@@ -159,6 +174,8 @@ function CozyClass(name,constructorFn=undefined,destructorFn=undefined,parentNam
 		
 		if (parent.hasModifier("final"))
 			throw $"Class {self.name} cannot inherit from final class {parent.name}";
+		if (parent.hasModifier("static"))
+			throw $"Class {self.name} cannot inherit from static class {parent.name}";
 		
 		return parent;
 	}
@@ -191,7 +208,7 @@ function CozyClass(name,constructorFn=undefined,destructorFn=undefined,parentNam
 	static setStatic = function(name,value,state=self.owner) {
 		__cozylang_check_timeout(state);
 		
-		if (is_cozyproperty(self.staticProperties[$ name]))
+		if (is_cozyproperty(self.staticProperties[$ name]) and !cozylang_is_callable(self.staticProperties[$ name].initializer) and cozylang_is_callable(self.staticProperties[$ name].setter))
 		{
 			self.staticProperties[$ name].set([value],state);
 			return;
@@ -225,6 +242,9 @@ function CozyClass(name,constructorFn=undefined,destructorFn=undefined,parentNam
 		}
 		
 		array_push(__visited,self);
+		
+		if (self.hasModifier("static"))
+			throw $"Class {self.name} cannot be instantiated as it is static";
 		
 		var object = undefined;
 		var parentClass = self.getParentClass(state);
@@ -362,8 +382,8 @@ function CozyClass(name,constructorFn=undefined,destructorFn=undefined,parentNam
 			if (is_cozyfunc(constructorFn))
 				constructorFn.target = object;
 			
-			cozylang_execute(constructorFn,args,state);
-		
+			var res = cozylang_execute(constructorFn,args,state);
+			
 			delete constructorFn;
 		}
 		
@@ -1422,6 +1442,13 @@ function CozyState(env) constructor {
 				case COZY_INSTR.PUSH_STACK_TOP:
 					self.pushStack(self.topStack());
 					break;
+				case COZY_INSTR.SWAP_STACK_TOP:
+					var a = self.popStack();
+					var b = self.popStack();
+					
+					self.pushStack(a);
+					self.pushStack(b);
+					break;
 				case COZY_INSTR.SET_LOCAL:
 					var name = bytecode[pc+1];
 					var value = self.popStack();
@@ -1511,6 +1538,7 @@ function CozyState(env) constructor {
 					var value = self.popStack();
 					var name = self.popStack();
 					var object = self.popStack();
+					show_debug_message(value);
 					
 					self.setProperty(object,name,value);
 					break;
@@ -1575,7 +1603,7 @@ function CozyState(env) constructor {
 					}
 					self.popStack();
 					
-					var object = cozyClass.newObject(newArguments);
+					var object = cozyClass.newObject(newArguments,cozyClass.owner,[],self.env.flags.alwaysCallParentConstructor);
 					
 					if (pushNewObject)
 						self.pushStack(object);
@@ -1587,6 +1615,7 @@ function CozyState(env) constructor {
 					var classModifiers = self.popStack();
 					var classIsStrict = self.popStack();
 					var classParent = self.popStack();
+					var classStaticConstructor = self.popStack();
 					var classConstructor = self.popStack();
 					var classDestructor = self.popStack();
 					var classFunctions = self.popStack();
@@ -1597,6 +1626,7 @@ function CozyState(env) constructor {
 					
 					var wrappedClass = new CozyClass(
 						name,
+						classStaticConstructor,
 						classConstructor,
 						classDestructor,
 						classParent,
@@ -1651,6 +1681,11 @@ function CozyState(env) constructor {
 					
 					self.pushStack(new CozyStackFlag(value));
 					pc++;
+					break;
+				case COZY_INSTR.CLASS_INIT_STATIC:
+					var class = self.popStack();
+					
+					class.staticInit();
 					break;
 				
 				/*

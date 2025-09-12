@@ -288,7 +288,7 @@ function CozyDirective() constructor {
 	/// @param {Struct.CozyNode} directiveNode
 	/// @param {Struct.CozyNode} node
 	/// @returns {Struct.CozyNode}
-	self.modifyNode = function(directiveNode,node) {}
+	self.modifyNode = function(directiveNode,node) {return node;}
 	
 	/// @param {Struct.CozyNode} directiveNode
 	/// @param {Struct.CozyToken} lexer
@@ -302,7 +302,6 @@ function CozyDirective() constructor {
 	static modifyPostParse = function(directiveNode,node) {
 		if (self.modifyNodeChildren)
 		{
-			show_debug_message(node)
 			for (var i = 0, n = array_length(node.children); i < n; i++)
 				node.children[i] = self.modifyPostParse(directiveNode,node.children[i]);
 		}

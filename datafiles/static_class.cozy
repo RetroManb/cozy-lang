@@ -1,0 +1,26 @@
+import cozy.std;
+
+static class MyAwesomeStaticClass {
+	/// EVERYTHING must be static
+	/// Can NOT be instantiated
+	/// Having `static final` or `final static` prints a warning
+	static property Number = 5;
+
+	
+	static func Method() {
+		return 2;
+	}
+	
+	/// Called immediately after class declaration
+	static constructor() {
+		MyAwesomeStaticClass.Number += 1;
+	}
+	/*
+	static destructor {
+		/// Would throw error
+	}
+	*/
+}
+
+print(MyAwesomeStaticClass.Number);
+print(MyAwesomeStaticClass.Method());
