@@ -394,6 +394,8 @@ function CozyEnvironment() constructor {
 	self.directives = {};
 	self.directives[$ "define"] = new CozyDirective();
 	self.directives[$ "include"] = new CozyDirective();
+	self.directives[$ "region"] = new CozyDirective();
+	self.directives[$ "regionend"] = new CozyDirective();
 	
 	/// @param {String} name
 	/// @returns {Bool}
