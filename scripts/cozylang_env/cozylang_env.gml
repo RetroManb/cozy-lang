@@ -330,6 +330,9 @@ function CozyEnvironmentFlags() constructor {
 	
 		/// Import a libraries sub-libraries on import?
 	self.importSubLibraries = true;
+	
+		/// Do structs bypass rawget and rawset methods?
+	self.structsBypassRawAccess = true;
 }
 
 function CozyEnvironment() constructor {
