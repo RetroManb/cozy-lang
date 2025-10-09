@@ -1334,7 +1334,13 @@ function CozyState(env) constructor {
 			if (result[0])
 			{
 				if (array_length(result) > 1)
-					self.pushStack(bool(result[1]));
+				{
+					var val = result[1];
+					if (operator == "?")
+						val = bool(val);
+					
+					self.pushStack(val);
+				}
 				else if (operator == "?")
 					throw $"Operator overload for ? prefix operator must return a boolean";
 				return true;
