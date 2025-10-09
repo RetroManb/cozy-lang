@@ -912,94 +912,12 @@ function __cozylang_get_libraries(env) {
 			state.setGlobal("throw",function(exception) {
 				throw exception;
 			});
-			state.setGlobal("rawget",function(object,name) {
-				if (is_struct(object))
-				{
-					if (is_instanceof(object,CozyClass))
-					{
-						if (object.isStrict and !(struct_exists(object.statics,name) or struct_exists(object.staticProperties,name)))
-							throw $"Property {name} does not exist in class";
-						
-						return object.statics[$ name];
-					}
-					else if (is_instanceof(object,CozyFunction))
-						return undefined;
-					else if (is_instanceof(object,CozyObject))
-					{
-						if (object.isStrict and !(struct_exists(object.variables,name) or struct_exists(object.properties,name)))
-						{
-							if (is_cozyclass(object.class) and struct_exists(object.class.statics,name))
-								return object.class.statics[$ name];
-							
-							throw $"Property {name} does not exist in object";
-						}
-						
-						return object.variables[$ name];
-					}
-					else
-						return object[$ name];
-				}
-				else if (is_handle(object) and instance_exists(object))
-					return variable_instance_get(object,name);
-				else if (is_array(object))
-				{
-					if (!is_numeric(name))
-						throw $"Attempt to access an array with a non-numeric index";
-						
-					return object[name];
-				}
-				else if (is_string(object))
-				{
-					if (!is_numeric(name))
-						throw $"Attempt to access a string with a non-numeric index";
-					if (name < 0 or name >= string_length(object))
-						throw $"Attempt to access a string out of bounds, {name} is outside of range [0..{string_length(object)-1}]"
-						
-					return string_char_at(object,name+1);
-				}
-				
-				throw $"Cannot use rawget on a {typeof(object)} value";
-			});
-			state.setGlobal("rawset",function(object,name,value) {
-				if (is_struct(object))
-				{
-					if (is_instanceof(object,CozyClass))
-					{
-						if (object.isStrict and !(struct_exists(object.statics,name) or struct_exists(object.staticProperties,name)))
-							throw $"Property {name} does not exist in class";
-						
-						object.statics[$ name] = value;
-					}
-					else if (is_instanceof(object,CozyFunction))
-						throw $"Attempt to modify function";
-					else if (is_instanceof(object,CozyObject))
-					{
-						
-						if (object.isStrict and !(struct_exists(object.variables,name) or struct_exists(object.properties,name)))
-						{
-							if (is_cozyclass(object.class) and struct_exists(object.class.statics,name))
-								object.class.statics[$ name] = value;
-							
-							throw $"Property {name} does not exist in object";
-						}
-						
-						object.variables[$ name] = value;
-					}
-					else
-						object[$ name] = value;
-				}
-				else if (is_handle(object) and instance_exists(object))
-					variable_instance_set(object,name,value);
-				else if (is_array(object))
-				{
-					if (!is_numeric(name))
-						throw $"Attempt to access an array with a non-numeric index";
-						
-					object[name] = value;
-				}
-				else
-					throw $"Cannot use rawget on a {typeof(object)} value";
-			});
+			state.setGlobal("rawget",method({state : state},function(object,name) {
+				return state.getPropertyRaw(object,name);
+			}));
+			state.setGlobal("rawset",method({state : state},function(object,name,value) {
+				return state.setPropertyRaw(object,name,value);
+			}));
 		});
 		var stringLib = new CozyLibrary("cozy.string",function(state) {
 			var _string = {};
