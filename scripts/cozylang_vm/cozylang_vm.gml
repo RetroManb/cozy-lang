@@ -1337,7 +1337,7 @@ function CozyState(env) constructor {
 				{
 					var val = result[1];
 					if (operator == "?")
-						val = bool(val);
+						val = cozylang_is_truthy(val);
 					
 					self.pushStack(val);
 				}
