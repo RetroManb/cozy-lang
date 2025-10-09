@@ -669,6 +669,11 @@ function CozyEnvironment() constructor {
 		
 		return current;
 	}
+	/// @param {String} name
+	static removeLibrary = function(name) {
+		if (struct_exists(self.libraries,name))
+			struct_remove(self.libraries,name);
+	}
 	
 	/// @param {String} dname
 	/// @param {String} namePrefix
@@ -918,6 +923,7 @@ function __cozylang_get_libraries(env) {
 			state.setGlobal("rawset",method({state : state},function(object,name,value) {
 				return state.setPropertyRaw(object,name,value);
 			}));
+			state.consts[$ "VERSION"] = COZY_VERSION;
 		});
 		var stringLib = new CozyLibrary("cozy.string",function(state) {
 			var _string = {};
@@ -1028,7 +1034,9 @@ function __cozylang_get_libraries(env) {
 			array.First = method(undefined,array_first);
 			array.Last = method(undefined,array_last);
 			array.Insert = method(undefined,array_insert);
-			array.Remove = method(undefined,array_delete);
+			array.Remove = method(undefined,function(array,index,count=1) {
+				array_delete(array,index,count);
+			});
 			array.IsEmpty = function(array) {
 				return array_length(array) == 0;
 			}
