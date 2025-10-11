@@ -1,7 +1,7 @@
 import cozy.std;
 
 class TestParent {
-	property parentProperty;
+	property parentProperty = "I'm from parent";
 }
 
 class MyClass : TestParent {
@@ -63,13 +63,28 @@ class MyClass : TestParent {
 	
 }
 
-class TestChild {
-	property childProperty;
+class TestChild : MyClass {
+	property childProperty = "I'm from child";
 }
 
-local obj = new MyClass();
+local a = new TestParent();
 
-obj.MyFunc();
+print(a.parentProperty);
 
-delete obj;
+delete a;
+
+local b = new MyClass();
+
+print(b.parentProperty);
+b.MyFunc();
+
+delete b;
+
+local c = new TestChild();
+
+print(c.parentProperty);
+c.MyFunc();
+print(c.childProperty);
+
+delete c;
 

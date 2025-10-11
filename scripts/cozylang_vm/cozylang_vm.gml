@@ -106,10 +106,14 @@ function CozyClass(name,staticConstructorFn=undefined,constructorFn=undefined,de
 	self.modifiers = modifiers;
 	
 	self.owner = owner;
+	self.parent = undefined;
 	
 	static staticInit = function() {
 		if (self.hasModifier("static") and self.hasModifier("final"))
 			throw $"Class {self.name} was given static and final modifiers";
+		
+		/// get parent
+		self.parent = self.getParentClass(self.owner);
 		
 		/// static property initializers
 		var staticNames = struct_get_names(self.staticProperties);
@@ -152,12 +156,12 @@ function CozyClass(name,staticConstructorFn=undefined,constructorFn=undefined,de
 			return false;
 		if (object.class == self)
 			return true;
-		var parent = object.class.getParentClass(state);
+		var parent = object.class.parent;
 		while (is_cozyclass(parent))
 		{
 			if (parent == self)
 				return true;
-			parent = parent.getParentClass(state);
+			parent = parent.parent;
 		}
 		
 		return false;
@@ -247,10 +251,10 @@ function CozyClass(name,staticConstructorFn=undefined,constructorFn=undefined,de
 			throw $"Class {self.name} cannot be instantiated as it is static";
 		
 		var object = undefined;
-		var parentClass = self.getParentClass(state);
+		var parentClass = self.parent;
 		if (is_undefined(parentClass))
 		{
-			if (self != global.cozylang.baseClass)
+			if (self == global.cozylang.baseClass)
 				object = new CozyObject(state);
 			else
 				object = global.cozylang.baseClass.newObject(args,state,__visited);
@@ -684,8 +688,6 @@ function CozyObject(owner=undefined) constructor {
 		}
 		
 		var struct = variable_clone(self.variables,1);
-		if (cozylang_is_callable(toStringFn))
-			struct.toString = {}.toString;
 		
 		var propertyNames = struct_get_names(self.properties);
 		for (var i = 0; i < array_length(propertyNames); i++)
@@ -1092,11 +1094,11 @@ function CozyState(env) constructor {
 		if (is_struct(object))
 		{
 			if (is_instanceof(object,CozyClass))
-				return object.getStatic(name);
+				return object.getStatic(name,self);
 			else if (is_instanceof(object,CozyFunction))
 				return undefined;
 			else if (is_instanceof(object,CozyObject))
-				return object.get(name);
+				return object.get(name,self);
 			else
 			{
 				if (self.env.flags.structGetterSetters and struct_exists(object,COZY_NAME_GET))

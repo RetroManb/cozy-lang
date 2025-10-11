@@ -5,4 +5,8 @@ import SingletonTest;
 
 print(Color.FromRGB(0.5,0,1) * Color.FromRGB(0.5,0.5,0.5));
 
-print(Singleton.GetInstance());
+local singleton = Singleton.GetInstance();
+
+print(singleton);
+
+singleton.Value += 1;
