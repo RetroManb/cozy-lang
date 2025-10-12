@@ -25,3 +25,4 @@ local strct = {
 */
 
 print(strct);
+print(classof strct);

@@ -1667,13 +1667,28 @@ function CozyState(env) constructor {
 					if (array_length(arr)%2 != 0)
 						throw $"Wrong struct literal";
 					
-					var struct = {};
-					for (var i = 0, n = array_length(arr); i < n; i += 2)
+					var struct = undefined;
+					if (self.env.flags.structLiteralsAreCozyObjects)
 					{
-						var name = arr[i];
-						var value = arr[i+1];
-						
-						struct[$ name] = value;
+						struct = global.cozylang.baseClass.newObject();
+						for (var i = 0, n = array_length(arr); i < n; i += 2)
+						{
+							var name = arr[i];
+							var value = arr[i+1];
+							
+							struct.variables[$ name] = value;
+						}
+					}
+					else
+					{
+						struct = {};
+						for (var i = 0, n = array_length(arr); i < n; i += 2)
+						{
+							var name = arr[i];
+							var value = arr[i+1];
+							
+							struct[$ name] = value;
+						}
 					}
 					
 					self.pushStack(struct);
