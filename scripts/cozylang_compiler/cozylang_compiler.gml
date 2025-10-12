@@ -590,13 +590,13 @@ function __cozylang_expr_is_deterministic(node) {
 	switch (node.type)
 	{
 		default:
-			break;
+			return false;
 		case COZY_NODE.LITERAL:
 			return true;
-		case COZY_NODE.IDENTIFIER:
-		case COZY_NODE.ARRAY_LITERAL:
-		case COZY_NODE.STRUCT_LITERAL:
-			return false;
+		case COZY_NODE.BIN_OPERATOR:
+		case COZY_NODE.PRE_OPERATOR:
+		case COZY_NODE.POST_OPERATOR:
+			break;
 	}
 	
 	for (var i = 0, n = array_length(node.children); i < n; i++)
@@ -3218,7 +3218,26 @@ function CozyCompiler(env) constructor {
 			case COZY_NODE.IF_EXPRESSION:
 				self.compileIfExpression(expressionNode,bytecode);
 				break;
+			case COZY_NODE.ARRAY_LITERAL:
+				self.compileArrayLiteral(expressionNode,bytecode);
+				break;
 		}
+	}
+	
+	/// @param {Struct.CozyNode} arrayLitNode
+	/// @param {Struct.CozyBytecode} bytecode
+	static compileArrayLiteral = function(arrayLitNode,bytecode) {
+		bytecode.push(COZY_INSTR.PUSH_STACKFLAG);
+		bytecode.push(COZY_STACKFLAG.ARRAY_END);
+		
+		for (var i = array_length(arrayLitNode.children)-1; i >= 0; i--)
+		{
+			var exprNode = arrayLitNode.children[i];
+			
+			self.compileExpression(exprNode,bytecode,false,-1);
+		}
+		
+		bytecode.push(COZY_INSTR.WRAP_ARRAY);
 	}
 	
 	/// @param {Struct.CozyNode} ifExprNode

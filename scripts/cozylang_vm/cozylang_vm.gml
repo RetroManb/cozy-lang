@@ -1407,7 +1407,7 @@ function CozyState(env) constructor {
 			
 			var instruction = bytecode[pc];
 			if (!is_numeric(instruction))
-				throw $"Found a non-numeric instruction with a type of: {typeof(instruction)}";
+				throw $"Found a non-numeric instruction with a type of: {typeof(instruction)} @ {pc}";
 			
 			switch (instruction)
 			{
@@ -1677,8 +1677,6 @@ function CozyState(env) constructor {
 					}
 					
 					self.pushStack(struct);
-					
-					pc++;
 					break;
 				case COZY_INSTR.WRAP_ARRAY:
 					var arr = [];
@@ -1692,8 +1690,6 @@ function CozyState(env) constructor {
 					self.popStack();
 					
 					self.pushStack(arr);
-					
-					pc++;
 					break;
 				case COZY_INSTR.NEW_OBJECT:
 					var pushNewObject = bytecode[pc+1];

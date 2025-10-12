@@ -421,6 +421,7 @@ function CozyParser(env) constructor {
 			case COZY_TOKEN.IDENTIFIER:
 			case COZY_TOKEN.OPERATOR:
 			case COZY_TOKEN.LEFT_PAREN:
+			case COZY_TOKEN.LEFT_SQ_BRACK:
 				var exprNode = self.parseExpression(lexer);
 				
 				node = exprNode;
@@ -1779,6 +1780,9 @@ function CozyParser(env) constructor {
 			case COZY_TOKEN.IF:
 				lhs = self.parseIfExpression(lexer);
 				break;
+			case COZY_TOKEN.LEFT_SQ_BRACK:
+				lhs = self.parseArrayLiteral(lexer);
+				break;
 		}
 		
 		var parsingExpression = true;
@@ -1931,6 +1935,57 @@ function CozyParser(env) constructor {
 	
 	/// @param {Struct.CozyLexer} lexer
 	/// @returns {Struct.CozyNode}
+	static parseArrayLiteral = function(lexer) {
+		var arrayLitNode = new CozyNode(
+			COZY_NODE.ARRAY_LITERAL,
+			undefined
+		);
+		
+		var parsingContents = true;
+		while (parsingContents)
+		{
+			var next = lexer.peek();
+			switch (next.type)
+			{
+				default:
+					throw $"Malformed array literal @ line: {next.line} col: {next.col}";
+				case COZY_TOKEN.RIGHT_SQ_BRACK:
+					parsingContents = false;
+					break;
+				case COZY_TOKEN.LITERAL:
+				case COZY_TOKEN.IDENTIFIER:
+				case COZY_TOKEN.OPERATOR:
+				case COZY_TOKEN.LEFT_PAREN:
+				case COZY_TOKEN.NEW:
+				case COZY_TOKEN.IF:
+				case COZY_TOKEN.FUNC:
+				case COZY_TOKEN.LEFT_SQ_BRACK:
+				//case COZY_TOKEN.LEFT_BRACKET:  /// TODO: UNCOMMENT WHEN STRUCT LITERALS EXIST!
+					arrayLitNode.addChild(self.parseExpression(lexer))
+					break;
+			}
+			
+			if (!parsingContents)
+				break;
+			
+			var next = lexer.next();
+			switch (next.type)
+			{
+				default:
+					throw $"Malformed array literal @ line: {next.line} col: {next.col}";
+				case COZY_TOKEN.RIGHT_SQ_BRACK:
+					parsingContents = false;
+					break;
+				case COZY_TOKEN.COMMA:
+					break;
+			}
+		}
+		
+		return arrayLitNode;
+	}
+	
+	/// @param {Struct.CozyLexer} lexer
+	/// @returns {Struct.CozyNode}
 	static parseIfExpression = function(lexer) {
 		var ifExprNode = new CozyNode(
 			COZY_NODE.IF_EXPRESSION,
@@ -2047,7 +2102,9 @@ function CozyParser(env) constructor {
 				case COZY_TOKEN.OPERATOR:
 				case COZY_TOKEN.LEFT_PAREN:
 				case COZY_TOKEN.NEW:
-				//case COZY_TOKEN.LEFT_SQ_BRACK: /// TODO: UNCOMMENT WHEN ARRAY LITERALS EXIST!
+				case COZY_TOKEN.IF:
+				case COZY_TOKEN.FUNC:
+				case COZY_TOKEN.LEFT_SQ_BRACK:
 				//case COZY_TOKEN.LEFT_BRACKET:  /// TODO: UNCOMMENT WHEN STRUCT LITERALS EXIST!
 					array_push(expressionNodes,self.parseExpression(lexer));
 					break;

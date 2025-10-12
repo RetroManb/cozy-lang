@@ -1,0 +1,10 @@
+import cozy.std;
+
+local arr = [
+	func {
+		return "Hey!";
+	},
+	"World!"
+];
+
+print(arr[0]());
