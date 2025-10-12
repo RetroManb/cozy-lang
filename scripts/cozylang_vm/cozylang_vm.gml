@@ -2287,7 +2287,7 @@ function CozyState(env) constructor {
 						throw $"Cannot delete function";
 					if (is_struct(object) and !is_cozyobject(object))
 					{
-						if (!self.env.canDeleteAnyStruct and (!is_callable(object[$ COZY_NAME_CANDELETE]) or !object[$ COZY_NAME_CANDELETE]()))
+						if (!self.env.flags.canDeleteAnyStruct and (!is_callable(object[$ COZY_NAME_CANDELETE]) or !object[$ COZY_NAME_CANDELETE]()))
 						{
 							throw $"Cannot delete {instanceof(object)} struct";
 						}

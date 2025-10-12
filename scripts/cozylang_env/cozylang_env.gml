@@ -328,6 +328,10 @@ function CozyEnvironmentFlags() constructor {
 		/// variable from a struct?
 	self.structGetterSetters = true;
 	
+		/// Don't use __CozyCanDelete struct methods to determine if it can be
+		/// deleted by Cozy?
+	self.canDeleteAnyStruct = false;
+	
 		/// Import a libraries sub-libraries on import?
 	self.importSubLibraries = true;
 	
