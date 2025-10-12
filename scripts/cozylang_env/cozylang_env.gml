@@ -333,6 +333,9 @@ function CozyEnvironmentFlags() constructor {
 	
 		/// Do structs bypass rawget and rawset methods?
 	self.structsBypassRawAccess = true;
+	
+		/// Allow multiplicitive operations on arrays?
+	self.arrayMultiplication = true;
 }
 
 function CozyEnvironment() constructor {
@@ -510,12 +513,11 @@ function CozyEnvironment() constructor {
 		"+","-",
 		"!","~",
 		"?",
-		"delete","classof"
-		//"++","--",
+		"delete","classof",
+		"++","--",
 	];
 	self.validPostfixOperators = [
-		
-		//"++","--",
+		"++","--",
 	];
 	self.overloadableOperators = [
 		"+","-",

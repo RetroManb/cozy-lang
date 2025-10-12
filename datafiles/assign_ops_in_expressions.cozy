@@ -1,0 +1,8 @@
+import cozy.std;
+
+a = 2;
+c = 9;
+b = 5;
+a += b += c;
+
+print(a,b,c);

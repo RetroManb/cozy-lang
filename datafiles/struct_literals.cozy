@@ -1,0 +1,8 @@
+import cozy.std;
+
+local strct = {
+	a : 0,
+	b : 1
+};
+
+print(strct.a);

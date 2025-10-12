@@ -1826,7 +1826,7 @@ function CozyParser(env) constructor {
 					parsingExpression = false;
 					break;
 				case COZY_TOKEN.OPERATOR:
-					if (!self.env.isValidOperator(op.value))
+					if (!self.env.isValidOperator(op.value) and !self.env.isValidPostfixOperator(op.value))
 						throw $"Invalid operator {op.value} in expression @ line: {op.line} col: {op.col}";
 					break;
 				case COZY_TOKEN.LEFT_SQ_BRACK:

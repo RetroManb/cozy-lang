@@ -1836,6 +1836,49 @@ function CozyState(env) constructor {
 							break;
 					}
 					
+					if (self.env.flags.arrayMultiplication)
+					{
+						var valid = false;
+						if (is_array(operandB))
+						{
+							if (!is_numeric(operandA))
+								throw $"Cannot multiply an array with a non-number";
+							
+							var temp = operandA;
+							operandA = operandB;
+							operandB = temp;
+							valid = true;
+						}
+						else if (is_array(operandA))
+						{
+							if (!is_numeric(operandB))
+								throw $"Cannot multiply an array with a non-number";
+							
+							valid = true;
+						}
+						
+						if (valid)
+						{
+							if (operandB <= 0)
+							{
+								self.pushStack([]);
+								break;
+							}
+						
+							var len = array_length(operandA);
+							var n = ceil(len*operandB);
+							var arr = array_create(n,undefined);
+							for (var i = 0; i < n; i++)
+							{
+								var ind = i%len;
+								arr[i] = operandA[ind];
+							}
+						
+							self.pushStack(arr);
+							break;
+						}
+					}
+					
 					self.pushStack(operandA * operandB);
 					break;
 				case COZY_INSTR.DIV:
@@ -1849,6 +1892,30 @@ function CozyState(env) constructor {
 							break;
 					}
 					
+					if (self.env.flags.arrayMultiplication and is_array(operandA))
+					{
+						if (!is_numeric(operandB))
+							throw $"Cannot divide an array with a non-number";
+							
+						if (operandB <= 0)
+						{
+							self.pushStack([]);
+							break;
+						}
+						
+						var len = array_length(operandA);
+						var n = ceil(len/operandB);
+						var arr = array_create(n,undefined);
+						for (var i = 0; i < n; i++)
+						{
+							var ind = i%len;
+							arr[i] = operandA[ind];
+						}
+						
+						self.pushStack(arr);
+						break;
+					}
+					
 					self.pushStack(operandA / operandB);
 					break;
 				case COZY_INSTR.MOD:
@@ -1860,6 +1927,26 @@ function CozyState(env) constructor {
 						var stop = self.handleInfixOperatorOverload("%",operandA,operandB);
 						if (stop)
 							break;
+					}
+					
+					if (self.env.flags.arrayMultiplication and is_array(operandA))
+					{
+						if (!is_numeric(operandB))
+							throw $"Cannot modulo an array with a non-number";
+							
+						if (operandB <= 0)
+						{
+							self.pushStack([]);
+							break;
+						}
+						
+						var len = array_length(operandA);
+						var arr = array_create(len,undefined);
+						array_copy(arr,0,operandA,0,len);
+						array_resize(arr,ceil(len%operandB));
+						
+						self.pushStack(arr);
+						break;
 					}
 					
 					self.pushStack(operandA % operandB);
@@ -1931,6 +2018,33 @@ function CozyState(env) constructor {
 							break;
 					}
 					
+					if (self.env.flags.arrayMultiplication and is_array(operandA))
+					{
+						if (!is_numeric(operandB))
+							throw $"Cannot exponentiate an array with a non-number";
+						
+						var len = array_length(operandA);
+						if (operandB <= 0)
+						{
+							if (len == 1)
+								self.pushStack([operandA[0]]);
+							else
+								self.pushStack([undefined]);
+							break;
+						}
+						
+						var n = ceil(power(len,operandB));
+						var arr = array_create(n,undefined);
+						for (var i = 0; i < n; i++)
+						{
+							var ind = i%len;
+							arr[i] = operandA[ind];
+						}
+						
+						self.pushStack(arr);
+						break;
+					}
+					
 					self.pushStack(power(operandA,operandB));
 					break;
 				case COZY_INSTR.IDIV:
@@ -1942,6 +2056,30 @@ function CozyState(env) constructor {
 						var stop = self.handleInfixOperatorOverload("//",operandA,operandB);
 						if (stop)
 							break;
+					}
+					
+					if (self.env.flags.arrayMultiplication and is_array(operandA))
+					{
+						if (!is_numeric(operandB))
+							throw $"Cannot divide an array with a non-number";
+						
+						if (operandB <= 0)
+						{
+							self.pushStack([]);
+							break;
+						}
+						
+						var len = array_length(operandA);
+						var n = ceil(len div operandB);
+						var arr = array_create(n,undefined);
+						for (var i = 0; i < n; i++)
+						{
+							var ind = i%len;
+							arr[i] = operandA[ind];
+						}
+						
+						self.pushStack(arr);
+						break;
 					}
 					
 					self.pushStack(operandA div operandB);

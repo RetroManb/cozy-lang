@@ -1,10 +1,9 @@
 import cozy.std;
 
-local arr = [
-	func {
-		return "Hey!";
-	},
-	"World!"
+local arr = 2 * [
+	"Hey,",
+	"World!",
+	"Bro"
 ];
 
-print(arr[0]());
+print(arr);
