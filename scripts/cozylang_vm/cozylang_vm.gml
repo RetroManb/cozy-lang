@@ -2335,16 +2335,7 @@ function CozyState(env) constructor {
 					{
 						var stop = self.handlePrefixOperatorOverload("?",value);
 						if (stop)
-						{
-							var value = self.topStack();
-							if (!is_numeric(value))
-								throw $"Operator overload for ? prefix operator must return a boolean";
-							
-							self.popStack();
-							self.pushStack(bool(value));
-							
 							break;
-						}
 					}
 					
 					self.pushStack(cozylang_is_truthy(value));
