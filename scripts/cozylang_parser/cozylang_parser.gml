@@ -1783,6 +1783,9 @@ function CozyParser(env) constructor {
 			case COZY_TOKEN.LEFT_SQ_BRACK:
 				lhs = self.parseArrayLiteral(lexer);
 				break;
+			case COZY_TOKEN.LEFT_BRACKET:
+				lhs = self.parseStructLiteral(lexer);
+				break;
 		}
 		
 		var parsingExpression = true;
@@ -1935,6 +1938,97 @@ function CozyParser(env) constructor {
 	
 	/// @param {Struct.CozyLexer} lexer
 	/// @returns {Struct.CozyNode}
+	static parseStructLiteral = function(lexer) {
+		var structLitNode = new CozyNode(
+			COZY_NODE.STRUCT_LITERAL,
+			undefined
+		);
+		
+		var parsingContents = true;
+		while (parsingContents)
+		{
+			var name = "";
+			var next = lexer.next();
+			switch (next.type)
+			{
+				default:
+					throw $"Malformed struct literal @ line: {next.line} col: {next.col}";
+				case COZY_TOKEN.LITERAL:
+					if (!is_struct(next.value))
+						throw $"Malformed struct literal @ line: {next.line} col: {next.col}";
+					
+					name = next.value;
+					break;
+				case COZY_TOKEN.IDENTIFIER:
+					name = next.value;
+					break;
+			}
+			
+			var next = lexer.next();
+			switch (next.type)
+			{
+				default:
+					throw $"Malformed struct literal @ line: {next.line} col: {next.col}";
+				case COZY_TOKEN.COLON: // a : b
+					var next = lexer.peek();
+					switch (next.type)
+					{
+						default:
+							throw $"Malformed struct literal @ line: {next.line} col: {next.col}";
+						case COZY_TOKEN.LITERAL:
+						case COZY_TOKEN.IDENTIFIER:
+						case COZY_TOKEN.OPERATOR:
+						case COZY_TOKEN.LEFT_PAREN:
+						case COZY_TOKEN.NEW:
+						case COZY_TOKEN.IF:
+						case COZY_TOKEN.SWITCH:
+						case COZY_TOKEN.FUNC:
+						case COZY_TOKEN.LEFT_SQ_BRACK:
+						case COZY_TOKEN.LEFT_BRACKET:
+							var memberNode = new CozyNode(
+								COZY_NODE.BIN_OPERATOR,
+								"="
+							);
+							memberNode.addChild(new CozyNode(
+								COZY_NODE.IDENTIFIER,
+								name
+							));
+							memberNode.addChild(self.parseExpression(lexer));
+							
+							structLitNode.addChild(memberNode);
+							break;
+					}
+					
+					var next = lexer.next();
+					switch (next.type)
+					{
+						default:
+							throw $"Malformed struct literal @ line: {next.line} col: {next.col}";
+						case COZY_TOKEN.RIGHT_BRACKET:
+							parsingContents = false;
+							break;
+						case COZY_TOKEN.COMMA:
+							break;
+					}
+					break;
+				case COZY_TOKEN.RIGHT_BRACKET:
+					parsingContents = false;
+				case COZY_TOKEN.COMMA: // a
+					var memberNode = new CozyNode(
+						COZY_NODE.IDENTIFIER,
+						name
+					);
+					
+					structLitNode.addChild(memberNode);
+					break;
+			}
+		}
+		
+		return structLitNode;
+	}
+	
+	/// @param {Struct.CozyLexer} lexer
+	/// @returns {Struct.CozyNode}
 	static parseArrayLiteral = function(lexer) {
 		var arrayLitNode = new CozyNode(
 			COZY_NODE.ARRAY_LITERAL,
@@ -1958,9 +2052,10 @@ function CozyParser(env) constructor {
 				case COZY_TOKEN.LEFT_PAREN:
 				case COZY_TOKEN.NEW:
 				case COZY_TOKEN.IF:
+				case COZY_TOKEN.SWITCH:
 				case COZY_TOKEN.FUNC:
 				case COZY_TOKEN.LEFT_SQ_BRACK:
-				//case COZY_TOKEN.LEFT_BRACKET:  /// TODO: UNCOMMENT WHEN STRUCT LITERALS EXIST!
+				case COZY_TOKEN.LEFT_BRACKET:
 					arrayLitNode.addChild(self.parseExpression(lexer))
 					break;
 			}
@@ -2103,9 +2198,10 @@ function CozyParser(env) constructor {
 				case COZY_TOKEN.LEFT_PAREN:
 				case COZY_TOKEN.NEW:
 				case COZY_TOKEN.IF:
+				case COZY_TOKEN.SWITCH:
 				case COZY_TOKEN.FUNC:
 				case COZY_TOKEN.LEFT_SQ_BRACK:
-				//case COZY_TOKEN.LEFT_BRACKET:  /// TODO: UNCOMMENT WHEN STRUCT LITERALS EXIST!
+				case COZY_TOKEN.LEFT_BRACKET:
 					array_push(expressionNodes,self.parseExpression(lexer));
 					break;
 			}

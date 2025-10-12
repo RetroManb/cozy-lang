@@ -3396,7 +3396,38 @@ function CozyCompiler(env) constructor {
 			case COZY_NODE.ARRAY_LITERAL:
 				self.compileArrayLiteral(expressionNode,bytecode);
 				break;
+			case COZY_NODE.STRUCT_LITERAL:
+				self.compileStructLiteral(expressionNode,bytecode);
+				break;
 		}
+	}
+	
+	/// @param {Struct.CozyNode} arrayLitNode
+	/// @param {Struct.CozyBytecode} bytecode
+	static compileStructLiteral = function(structLitNode,bytecode) {
+		bytecode.push(COZY_INSTR.PUSH_STACKFLAG);
+		bytecode.push(COZY_STACKFLAG.STRUCT_END);
+		
+		for (var i = array_length(structLitNode.children)-1; i >= 0; i--)
+		{
+			var node = structLitNode.children[i];
+			
+			switch (node.type)
+			{
+				case COZY_NODE.IDENTIFIER:
+					self.compileExpression(node,bytecode,false,1);
+					bytecode.push(COZY_INSTR.PUSH_CONST);
+					bytecode.push(node.value);
+					break;
+				case COZY_NODE.BIN_OPERATOR:
+					self.compileExpression(node.children[1],bytecode,false,1);
+					bytecode.push(COZY_INSTR.PUSH_CONST);
+					bytecode.push(node.children[0].value);
+					break;
+			}
+		}
+		
+		bytecode.push(COZY_INSTR.WRAP_STRUCT);
 	}
 	
 	/// @param {Struct.CozyNode} arrayLitNode
