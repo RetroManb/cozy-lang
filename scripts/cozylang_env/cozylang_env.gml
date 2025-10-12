@@ -334,7 +334,7 @@ function CozyEnvironmentFlags() constructor {
 		/// Do structs bypass rawget and rawset methods?
 	self.structsBypassRawAccess = true;
 	
-		/// Allow multiplicitive operations on arrays?
+		/// Allow multiplicative operations on arrays?
 	self.arrayMultiplication = true;
 }
 
