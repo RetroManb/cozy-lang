@@ -1948,19 +1948,19 @@ function CozyParser(env) constructor {
 		while (parsingContents)
 		{
 			var name = "";
-			var next = lexer.next();
-			switch (next.type)
+			var nameToken = lexer.next();
+			switch (nameToken.type)
 			{
 				default:
 					throw $"Malformed struct literal @ line: {next.line} col: {next.col}";
 				case COZY_TOKEN.LITERAL:
-					if (!is_struct(next.value))
+					if (!is_string(nameToken.value))
 						throw $"Malformed struct literal @ line: {next.line} col: {next.col}";
 					
-					name = next.value;
+					name = nameToken.value;
 					break;
 				case COZY_TOKEN.IDENTIFIER:
-					name = next.value;
+					name = nameToken.value;
 					break;
 			}
 			
@@ -2014,6 +2014,9 @@ function CozyParser(env) constructor {
 				case COZY_TOKEN.RIGHT_BRACKET:
 					parsingContents = false;
 				case COZY_TOKEN.COMMA: // a
+					if (nameToken.type == COZY_TOKEN.LITERAL) // disallow {"a"} or {"a",...}
+						throw $"Malformed struct literal @ line: {nameToken.line} col: {nameToken.col}";
+					
 					var memberNode = new CozyNode(
 						COZY_NODE.IDENTIFIER,
 						name
