@@ -28,6 +28,7 @@
     {"$GMIncludedFile":"","%Name":"bypass_test.cozy","CopyToMask":-1,"filePath":"datafiles","name":"bypass_test.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"class.cozy","CopyToMask":-1,"filePath":"datafiles","name":"class.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"const.cozy","CopyToMask":-1,"filePath":"datafiles","name":"const.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
+    {"$GMIncludedFile":"","%Name":"CozyLang_Dark.xml","CopyToMask":-1,"filePath":"datafiles","name":"CozyLang_Dark.xml","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"custom-library-test.cozy","CopyToMask":-1,"filePath":"datafiles","name":"custom-library-test.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"directives.cozy","CopyToMask":-1,"filePath":"datafiles","name":"directives.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"expression_optimization.cozy","CopyToMask":-1,"filePath":"datafiles","name":"expression_optimization.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
