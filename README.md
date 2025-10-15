@@ -32,7 +32,7 @@ for (local i = 1; i <= count; i++) {
 	if (i % 5 == 0) {
 		out += "Buzz";
 	}
-	if (out == "") { // OR string.IsEmpty(out)
+	if (out == "") { /// OR string.IsEmpty(out)
 		out = string.ToString(i);
 	}
 	
