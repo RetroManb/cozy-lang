@@ -23,7 +23,7 @@ import cozy.string;
 
 local count = 100;
 
-for (local i = 1; i <= count; i += 1) {
+for (local i = 1; i <= count; i++) {
 	local out = "";
 	
 	if (i % 3 == 0) {
