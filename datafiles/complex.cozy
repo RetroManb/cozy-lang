@@ -1,0 +1,106 @@
+import cozy.std;
+import cozy.math;
+import cozy.string;
+import cozy.types;
+
+const class !Complex {
+	property Real
+	{
+		/// get
+		{
+			return rawget(this,"Real");
+		}
+		/// set
+		value {
+			rawset(this,"Real",math.TryReal(value,0));
+		}
+	}
+	property Im
+	{
+		/// get
+		{
+			return rawget(this,"Im");
+		}
+		/// set
+		value {
+			rawset(this,"Im",math.TryReal(value,0));
+		}
+	}
+	
+	static property One = new Complex(1,0);
+	static property I = new Complex(0,1);
+	
+	constructor(real,imaginary) {
+		this.Real = real;
+		this.Im = imaginary;
+	}
+	
+	static func ToString {
+		if (this.Im >= 0) {
+			return string.ToString(this.Real) + " + " + string.ToString(this.Im) + "i";
+		}
+		else {
+			return string.ToString(this.Real) + " - " + string.ToString(-this.Im) + "i";
+		}
+	}
+	
+	operator prefix -() {
+		return new Complex(-this.Real,-this.Im);
+	}
+	operator prefix +() {
+		return new Complex(+this.Real,+this.Im);
+	}
+	operator prefix ?() {
+		return this.Real != 0 and this.Im != 0;
+	}
+	operator prefix ~() {
+		return Complex(~this.Real,~this.Im);
+	}
+	operator infix +(other) {
+		if (types.IsNumeric(other)) {
+			return Complex(this.Real + other,this.Im);
+		}
+		else if (classof other == Complex) {
+			return Complex(this.Real + other.Real,this.Im + other.Im);
+		}
+		return undefined;
+	}
+	operator infix -(other) {
+		if (types.IsNumeric(other)) {
+			return Complex(this.Real - other,this.Im);
+		}
+		else if (classof other == Complex) {
+			return Complex(this.Real - other.Real,this.Im - other.Im);
+		}
+		return undefined;
+	}
+	operator infix *(other) {
+		if (types.IsNumeric(other)) {
+			return Complex(this.Real * other,this.Im * other);
+		}
+		else if (classof other == Complex) {
+			return Complex(this.Real*other.Real - this.Im*other.Im,this.Real*other.Im + this.Im*other.Real);
+		}
+		return undefined;
+	}
+	operator infix /(other) {
+		if (types.IsNumeric(other)) {
+			return Complex(this.Real / other,this.Im / other);
+		}
+		else if (classof other == Complex) {
+			local denom = (other.Real**2 + other.Im**2);
+			return Complex((this.Real*other.Real + this.Im*other.Im)/denom,(this.Im*other.Real - this.Real*other.Im)/denom);
+		}
+		return undefined;
+	}
+	operator infix //(other) {
+		if (types.IsNumeric(other)) {
+			return Complex(this.Real // other,this.Im // other);
+		}
+		else if (classof other == Complex) {
+			local denom = (other.Real**2 + other.Im**2);
+			return Complex((this.Real*other.Real + this.Im*other.Im)//denom,(this.Im*other.Real - this.Real*other.Im)//denom);
+		}
+		return undefined;
+	}
+}

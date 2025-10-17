@@ -13,6 +13,18 @@ const func Hey() {
 
 Hey();
 
+/// const class
+
+const class Class() {
+	property value = undefined;
+	
+	constructor {
+		this.value = "Hello, World!";
+	}
+}
+
+print(new Class().value);
+
 /// local const
 
 /*local const POOP_TEXT = "Poop";
