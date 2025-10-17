@@ -1064,7 +1064,9 @@ function __cozylang_get_libraries(env) {
 			types.IsStruct = method(undefined,is_struct);
 			types.IsObject = method(undefined,is_cozyobject);
 			types.IsClass = method(undefined,is_cozyclass);
-			types.IsFunc = method(undefined,is_cozyfunc);
+			types.IsFunc = method(undefined,function(v) {
+				return is_method(v) or is_cozyfunc(v);
+			});
 			types.IsHandle = method(undefined,is_handle);
 			types.IsCallable = method(undefined,cozylang_is_callable);
 			
