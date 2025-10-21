@@ -1,0 +1,12 @@
+import cozy.std;
+
+local a = 0;
+local b = 5;
+if (a == b)
+{
+	print("Hello, World!");
+}
+else
+{
+	print("Goodbye, World!");
+}
