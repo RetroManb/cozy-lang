@@ -697,6 +697,72 @@ function CozyObject(owner=undefined) constructor {
 	}
 }
 
+/// @param {Any} value
+/// @param {String} name
+/// @param {Function|Struct.CozyFunction} getter
+/// @param {Function|Struct.CozyFunction} setter
+/// @param {Function|Struct.CozyFunction} initializer
+/// @param {Array<String>} modifiers
+/// @param {Struct} object
+/// @param {Struct.CozyState} owner
+function CozyVariable(value=undefined,name="<NONAME>",getter=undefined,setter=undefined,initializer=undefined,modifiers=[],object=undefined,owner=undefined) constructor {
+	self.value = undefined;
+	self.name = name;
+	self.getter = is_callable(getter) ?
+		method(self,getter) :
+		getter;
+	self.setter = is_callable(setter) ?
+		method(self,setter) :
+		setter;
+	self.initializer = is_callable(initializer) ?
+		method(self,initializer) :
+		initializer;
+	self.modifiers = modifiers;
+	
+	self.object = object;
+	self.setObject(object);
+	self.owner = owner;
+	
+	static get = function() {
+		return self.value;
+	}
+	static set = function(value) {
+		self.value = value;
+	}
+	static initialize = function() {
+		var result = cozylang_execute(self.initializer,[],self.owner);
+		if (array_length(result) < 2 or !result[0])
+			throw $"Variable initializer did not return a value";
+		
+		var initValue = result[1];
+		
+		self.value = initValue;
+	}
+	
+	static clone = function() {
+		return new CozyVariable(
+			self.value,
+			self.name,
+			self.getter,
+			self.setter,
+			self.initializer,
+			self.modifiers,
+			self.object,
+			self.owner
+		);
+	}
+	/// @param {Struct} object
+	static setObject = function(object) {
+		self.object = object;
+		if (is_cozyfunc(self.getter))
+			self.getter.target = object;
+		if (is_cozyfunc(self.setter))
+			self.setter.target = object;
+		if (is_cozyfunc(self.initializer))
+			self.initializer.target = object;
+	}
+}
+
 /// @param {String} name
 /// @param {Array<Any>|Function} bytecode
 /// @param {Array<String>} argNames
