@@ -38,6 +38,7 @@
     {"$GMIncludedFile":"","%Name":"func_expr.cozy","CopyToMask":-1,"filePath":"datafiles","name":"func_expr.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"gml_random.cozy","CopyToMask":-1,"filePath":"datafiles","name":"gml_random.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"gml_random.cz","CopyToMask":-1,"filePath":"datafiles","name":"gml_random.cz","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
+    {"$GMIncludedFile":"","%Name":"idea.cozy","CopyToMask":-1,"filePath":"datafiles","name":"idea.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"hello_world.cozy","CopyToMask":-1,"filePath":"datafiles","name":"hello_world.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"if_expression.cozy","CopyToMask":-1,"filePath":"datafiles","name":"if_expression.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"if_optimization_test.cozy","CopyToMask":-1,"filePath":"datafiles","name":"if_optimization_test.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},

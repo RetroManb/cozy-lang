@@ -76,15 +76,15 @@ function CozyLibrary(name,bytecode) constructor {
 				exposedConsts : self.exposedConsts,
 				exposedDynamicConsts : self.exposedDynamicConsts
 			};
-			self.libState.consts[$ "libexpose_global"] = method(libexposeSelf,self.__libexpose_global);
-			self.libState.consts[$ "libexpose_const"] = method(libexposeSelf,self.__libexpose_const);
-			self.libState.consts[$ "libexpose_dynconst"] = method(libexposeSelf,self.__libexpose_dynconst);
+			self.libState.consts.set("libexpose_global",method(libexposeSelf,self.__libexpose_global));
+			self.libState.consts.set("libexpose_const",method(libexposeSelf,self.__libexpose_const));
+			self.libState.consts.set("libexpose_dynconst",method(libexposeSelf,self.__libexpose_dynconst));
 		
 			self.libState.runFunction(self.func);
 			
-			struct_remove(self.libState.consts,"libexpose_global");
-			struct_remove(self.libState.consts,"libexpose_const");
-			struct_remove(self.libState.consts,"libexpose_dynconst");
+			self.libState.consts.remove("libexpose_global");
+			self.libState.consts.remove("libexpose_const");
+			self.libState.consts.remove("libexpose_dynconst");
 			
 			self.cached = true;
 		}
@@ -122,7 +122,7 @@ function CozyLibrary(name,bytecode) constructor {
 			var name = constNames[i];
 			if (struct_exists(state.consts,name) or struct_exists(state.dynamicConsts,name))
 				throw $"Constant {name} from library {self.name} is already declared";
-			state.consts[$ name] = self.exposedConsts[$ name];
+			state.consts.set(name,self.exposedConsts[$ name]);
 		}
 		var dynConstNames = struct_get_names(self.exposedDynamicConsts);
 		for (var i = 0, n = array_length(dynConstNames); i < n; i++)
@@ -238,14 +238,14 @@ function CozyLibraryBuilder(name) constructor {
 		for (var i = 0, n = array_length(structLibraryNames); i < n; i++)
 		{
 			var name = structLibraryNames[i];
-			state.consts[$ name] = structLibraries[$ name];
+			state.consts.set(name,structLibraries[$ name]);
 		}
 		
 		var constNames = struct_get_names(consts);
 		for (var i = 0, n = array_length(constNames); i < n; i++)
 		{
 			var name = constNames[i];
-			state.consts[$ name] = consts[$ name];
+			state.consts.set(name,consts[$ name]);
 		}
 		
 		var dynConstNames = struct_get_names(dynamicConsts);
@@ -923,13 +923,13 @@ function __cozylang_get_libraries(env) {
 			state.setGlobal("throw",function(exception) {
 				throw exception;
 			});
-			state.setGlobal("rawget",method({state : state},function(object,name) {
+			/*state.setGlobal("rawget",method({state : state},function(object,name) {
 				return state.getPropertyRaw(object,name);
 			}));
 			state.setGlobal("rawset",method({state : state},function(object,name,value) {
 				return state.setPropertyRaw(object,name,value);
-			}));
-			state.consts[$ "VERSION"] = COZY_VERSION;
+			}));*/
+			state.consts.set("VERSION",COZY_VERSION);
 		});
 		var stringLib = new CozyLibrary("cozy.string",function(state) {
 			var _string = {};
