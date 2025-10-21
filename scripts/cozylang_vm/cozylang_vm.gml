@@ -706,7 +706,7 @@ function CozyObject(owner=undefined) constructor {
 /// @param {Struct} object
 /// @param {Struct.CozyState} owner
 function CozyVariable(value=undefined,name="<NONAME>",getter=undefined,setter=undefined,initializer=undefined,modifiers=[],object=undefined,owner=undefined) constructor {
-	self.value = undefined;
+	self.value = value;
 	self.name = name;
 	self.getter = is_callable(getter) ?
 		method(self,getter) :
@@ -719,16 +719,20 @@ function CozyVariable(value=undefined,name="<NONAME>",getter=undefined,setter=un
 		initializer;
 	self.modifiers = modifiers;
 	
-	self.object = object;
+	self.object = undefined;
 	self.setObject(object);
 	self.owner = owner;
+	
+	static hasModifier = function(name) {
+		return array_get_index(self.modifiers,name) >= 0;
+	}
 	
 	static get = function() {
 		if (cozylang_is_callable(self.getter))
 		{
 			var result = cozylang_execute(self.setter,[],self.owner);
 			if (array_length(result) < 2 or !result[0])
-				throw $"Setter for variable named {self.name} did not return a value";
+				throw $"Getter for variable named {self.name} did not return a value";
 		
 			newValue = result[1];
 		}
@@ -751,18 +755,16 @@ function CozyVariable(value=undefined,name="<NONAME>",getter=undefined,setter=un
 		self.value = newValue;
 	}
 	static initialize = function() {
-		if (cozylang_is_callable(self.initializer))
-		{
-			var result = cozylang_execute(self.initializer,[],self.owner);
-			if (array_length(result) < 2 or !result[0])
-				throw $"Initializer for variable named {self.name} did not return a value";
-		
-			var initValue = result[1];
-		
-			self.value = initValue;
-		}
-		else
+		if (!cozylang_is_callable(self.initializer))
 			throw $"Tried to initialize variable named {self.name} despite having no initializer";
+		
+		var result = cozylang_execute(self.initializer,[],self.owner);
+		if (array_length(result) < 2 or !result[0])
+			throw $"Initializer for variable named {self.name} did not return a value";
+		
+		var initValue = result[1];
+		
+		self.value = initValue;
 	}
 	
 	static clone = function() {
@@ -787,6 +789,74 @@ function CozyVariable(value=undefined,name="<NONAME>",getter=undefined,setter=un
 		if (is_cozyfunc(self.initializer))
 			self.initializer.target = object;
 	}
+	
+	static toString = function() {
+		var _modifiers = "";
+		for (var i = 0, n = array_length(self.modifiers); i < n; i++)
+			_modifiers += string(modifiers[i]) + " ";
+		var _get = cozylang_is_callable(self.getter) ? "get " : "";
+		var _set = cozylang_is_callable(self.setter) ? "set " : "";
+		var equals = cozylang_is_callable(self.initializer) ? "= " : "";
+		
+		return $"<CozyVariable {_modifiers}{self.name} = {self.value} {_get}{_set}{equals}>";
+	}
+}
+
+/// @param {Bool} removeIfUndefined
+/// @param {Bool} frozen
+/// @param {String} ownerName
+function CozyVariableContainer(removeIfUndefined=false,frozen=false,ownerName="") constructor {
+	self.variables = {};
+	self.removeIfUndefined = removeIfUndefined;
+	self.frozen = frozen;
+	self.ownerName = ownerName;
+	
+	static exists = function(name) {
+		return struct_exists(self.variables,name);
+	}
+	static get = function(name) {
+		return cozylang_resolve_var(self.getRaw(name));
+	}
+	static getRaw = function(name) {
+		return self.variables[$ name];
+	}
+	static set = function(name,value) {
+		value = cozylang_resolve_var(value);
+		self.setRaw(name,value);
+	}
+	static setRaw = function(name,value) {
+		if (self.frozen)
+			throw $"Attempt to modify frozen {ownerName}";
+		
+		if (self.removeIfUndefined and is_undefined(value))
+		{
+			struct_remove(self.variables,name);
+			return;
+		}
+		
+		self.variables[$ name] = value;
+	}
+	static remove = function(name) {
+		struct_remove(self.variables,name);
+	}
+	
+	static clear = function() {
+		var names = self.allNames();
+		for (var i = 0, n = array_length(names); i < n; i++)
+			struct_remove(self.variables,names[i]);
+	}
+	static allNames = function() {
+		gml_pragma("forceinline");
+		
+		return struct_get_names(self.variables);
+	}
+}
+
+/// @param {Any} value
+function cozylang_resolve_var(value) {
+	if (is_cozyvariable(value))
+		return value.value;
+	return value;
 }
 
 /// @param {String} name
@@ -890,6 +960,14 @@ function is_cozyobject(obj) {
 /// @returns {Bool}
 function is_cozyproperty(prop) {
 	if (is_struct(prop) and is_instanceof(prop,CozyObjectProperty))
+		return true;
+	return false;
+}
+
+/// @param {Struct.CozyVariable} vari
+/// @returns {Bool}
+function is_cozyvariable(vari) {
+	if (is_struct(vari) and is_instanceof(vari,CozyVariable))
 		return true;
 	return false;
 }
@@ -1044,8 +1122,8 @@ function CozyState(env) constructor {
 	
 	self.stack = [];
 	
-	self.globals = {};
-	self.consts = {};
+	self.globals = new CozyVariableContainer(true,false,"globals");
+	self.consts = new CozyVariableContainer(false,false,"consts");
 	self.dynamicConsts = {};
 	self.locals = {};
 	self.localConsts = {};
@@ -1076,17 +1154,13 @@ function CozyState(env) constructor {
 		self.stdout = "";
 		self.stderr = "";
 		
-		var names = struct_get_names(self.globals);
-		for (var i = 0, n = array_length(names); i < n; i++)
-			struct_remove(self.globals,names[i]);
+		self.globals.clear();
 		
 		var names = struct_get_names(self.locals);
 		for (var i = 0, n = array_length(names); i < n; i++)
 			struct_remove(self.locals,names[i]);
 		
-		var names = struct_get_names(self.consts);
-		for (var i = 0, n = array_length(names); i < n; i++)
-			struct_remove(self.consts,names[i]);
+		self.consts.clear();
 		
 		var names = struct_get_names(self.dynamicConsts);
 		for (var i = 0, n = array_length(names); i < n; i++)
@@ -1099,6 +1173,10 @@ function CozyState(env) constructor {
 	
 	/// @returns {Any}
 	static popStack = function() {
+		return cozylang_resolve_var(self.popStackRaw());
+	}
+	/// @returns {Any}
+	static popStackRaw = function() {
 		if (array_length(self.stack) <= 0)
 			throw $"Stack underflow";
 		
@@ -1108,6 +1186,9 @@ function CozyState(env) constructor {
 		array_push(self.stack,value);
 	}
 	static topStack = function() {
+		return cozylang_resolve_var(self.topStackRaw());
+	}
+	static topStackRaw = function() {
 		return array_last(self.stack);
 	}
 	static printStack = function() {
@@ -1120,6 +1201,7 @@ function CozyState(env) constructor {
 	/// @param {String} name
 	/// @param {Any} value
 	static set = function(name,value) {
+		value = cozylang_resolve_var(value);
 		if (struct_exists(self.consts,name) or struct_exists(self.dynamicConsts,name) or struct_exists(self.localConsts,name))
 			throw $"Attempt to modify constant variable {name}";
 		if (struct_exists(self.locals,name))
@@ -1143,10 +1225,39 @@ function CozyState(env) constructor {
 			return self.getGlobal(name);
 	}
 	
+	/// @param {String} name
+	/// @param {Any} value
+	static setRaw = function(name,value) {
+		if (struct_exists(self.consts,name) or struct_exists(self.dynamicConsts,name) or struct_exists(self.localConsts,name))
+			throw $"Attempt to modify constant variable {name}";
+		if (struct_exists(self.locals,name))
+			self.setLocal(name,value);
+		else
+			self.setGlobalRaw(name,value);
+	}
+	
+	/// @param {String} name
+	/// @returns {Any}
+	static getRaw = function(name) {
+		if (struct_exists(self.dynamicConsts,name))
+			return self.getDynamicConst(name);
+		else if (struct_exists(self.localConsts,name))
+			return self.getLocalConst(name);
+		else if (struct_exists(self.consts,name))
+			return self.getConstRaw(name);
+		else if (struct_exists(self.locals,name))
+			return self.getLocal(name);
+		else
+			return self.getGlobalRaw(name);
+	}
+	
 	/// @param {Struct|Struct.CozyObject|Struct.CozyFunction|Struct.CozyClass|Id.Instance|Array<Any>} object
 	/// @param {String|Real} name
 	/// @param {Any} value
 	static setProperty = function(object,name,value) {
+		var variable = is_cozyvariable(object) ? object : undefined;
+		object = cozylang_resolve_var(object);
+		
 		if (is_struct(object))
 		{
 			if (is_instanceof(object,CozyClass))
@@ -1183,6 +1294,9 @@ function CozyState(env) constructor {
 	/// @param {String|Real} name
 	/// @returns {Any}
 	static getProperty = function(object,name) {
+		var variable = is_cozyvariable(object) ? object : undefined;
+		object = cozylang_resolve_var(object);
+		
 		if (is_struct(object))
 		{
 			if (is_instanceof(object,CozyClass))
@@ -1221,131 +1335,32 @@ function CozyState(env) constructor {
 			throw $"Attempt to access a {typeof(object)} value";
 	}
 	
-	static getPropertyRaw = function(object,name) {
-		if (is_struct(object))
-		{
-			if (is_instanceof(object,CozyClass))
-			{
-				if (object.isStrict and !(struct_exists(object.statics,name) or struct_exists(object.staticProperties,name)))
-					throw $"Property {name} does not exist in class";
-						
-				return object.statics[$ name];
-			}
-			else if (is_instanceof(object,CozyFunction))
-				return undefined;
-			else if (is_instanceof(object,CozyObject))
-			{
-				if (object.isStrict and !(struct_exists(object.variables,name) or struct_exists(object.properties,name)))
-				{
-					if (is_cozyclass(object.class) and struct_exists(object.class.statics,name))
-						return object.class.statics[$ name];
-							
-					throw $"Property {name} does not exist in object";
-				}
-						
-				return object.variables[$ name];
-			}
-			else
-			{
-				if (self.env.flags.structGetterSetters and self.env.flags.structsBypassRawAccess and struct_exists(object,COZY_NAME_GET))
-					return object[$ COZY_NAME_GET](name);
-				
-				return object[$ name];
-			}
-		}
-		else if (is_handle(object) and instance_exists(object))
-			return variable_instance_get(object,name);
-		else if (is_array(object))
-		{
-			if (!is_numeric(name))
-				throw $"Attempt to access an array with a non-numeric index";
-						
-			return object[name];
-		}
-		else if (is_string(object))
-		{
-			if (!is_numeric(name))
-				throw $"Attempt to access a string with a non-numeric index";
-			if (name < 0 or name >= string_length(object))
-				throw $"Attempt to access a string out of bounds, {name} is outside of range [0..{string_length(object)-1}]"
-						
-			return string_char_at(object,name+1);
-		}
-		else
-			throw $"Cannot use rawget on a {typeof(object)} value";
-	}
-	
-	static setPropertyRaw = function(object,name,value) {
-		if (is_struct(object))
-		{
-			if (is_instanceof(object,CozyClass))
-			{
-				if (object.isStrict and !(struct_exists(object.statics,name) or struct_exists(object.staticProperties,name)))
-					throw $"Property {name} does not exist in class";
-						
-				object.statics[$ name] = value;
-			}
-			else if (is_instanceof(object,CozyFunction))
-				throw $"Attempt to modify function";
-			else if (is_instanceof(object,CozyObject))
-			{
-						
-				if (object.isStrict and !(struct_exists(object.variables,name) or struct_exists(object.properties,name)))
-				{
-					if (is_cozyclass(object.class) and struct_exists(object.class.statics,name))
-						object.class.statics[$ name] = value;
-							
-					throw $"Property {name} does not exist in object";
-				}
-						
-				object.variables[$ name] = value;
-			}
-			else
-			{
-				if (self.env.flags.structGetterSetters and self.env.flags.structsBypassRawAccess and struct_exists(object,COZY_NAME_SET))
-				{
-					var result = object[$ COZY_NAME_SET](name,value);
-					if (!result)
-						throw $"Cannot modify {name} property of {instanceof(object)} struct";
-				}
-				
-				object[$ name] = value;
-			}
-		}
-		else if (is_handle(object) and instance_exists(object))
-			variable_instance_set(object,name,value);
-		else if (is_array(object))
-		{
-			if (!is_numeric(name))
-				throw $"Attempt to access an array with a non-numeric index";
-						
-			object[name] = value;
-		}
-		else
-			throw $"Cannot use rawget on a {typeof(object)} value";
-	}
-	
 	/// @param {String} name
 	/// @param {Any} value
 	static setGlobal = function(name,value) {
-		if (is_undefined(value))
-		{
-			struct_remove(self.globals,name);
-			return;
-		}
-		
-		self.globals[$ name] = value;
+		self.globals.set(name,value);
 	}
 	/// @param {String} name
 	/// @returns {Any}
 	static getGlobal = function(name) {
-		return self.globals[$ name];
+		return self.globals.get(name);
+	}
+	
+	/// @param {String} name
+	/// @param {Any} value
+	static setGlobalRaw = function(name,value) {
+		self.globals.setRaw(name,value);
+	}
+	/// @param {String} name
+	/// @returns {Any}
+	static getGlobalRaw = function(name) {
+		return self.globals.getRaw(name);
 	}
 	
 	/// @param {String} name
 	/// @param {Any} value
 	static setLocal = function(name,value) {
-		self.locals[$ name] = value;
+		self.locals[$ name] = new CozyVariable(value,name);
 	}
 	/// @param {String} name
 	/// @returns {Any}
@@ -1355,12 +1370,20 @@ function CozyState(env) constructor {
 	/// @param {String} name
 	/// @returns {Any}
 	static getConst = function(name) {
-		return self.consts[$ name];
+		return self.consts.get(name);
+	}
+	/// @param {String} name
+	/// @returns {Any}
+	static getConstRaw = function(name) {
+		return self.consts.getRaw(name);
 	}
 	/// @param {String} name
 	/// @returns {Any}
 	static getDynamicConst = function(name) {
-		return self.dynamicConsts[$ name]();
+		var result = cozylang_execute(self.dynamicConsts[$ name],[],self);
+		if (array_length(result) < 2 or !result[0])
+			throw $"Dynamic constant function for {name} didn't return anything";
+		return result[1];
 	}
 	/// @param {String} name
 	/// @returns {Any}
@@ -1506,22 +1529,18 @@ function CozyState(env) constructor {
 				default:
 					break;
 				case COZY_INSTR.PUSH_CONST:
-					self.pushStack(bytecode[pc+1]);
-					
-					pc++;
+					self.pushStack(bytecode[++pc]);
 					break;
 				case COZY_INSTR.MAKE_CONST:
-					var name = bytecode[pc+1];
+					var name = bytecode[++pc];
 					
 					if (struct_exists(self.consts,name) or struct_exists(self.dynamicConsts,name))
 						throw $"Attempt to modify constant {name}";
 					
-					self.consts[$ name] = self.popStack();
-					
-					pc++;
+					self.consts.set(self.popStack());
 					break;
 				case COZY_INSTR.WRAP_FUNCTION:
-					var fnArgCount = bytecode[pc+1];
+					var fnArgCount = bytecode[++pc];
 					
 					var fnHasParams = self.popStack();
 					
@@ -1539,16 +1558,12 @@ function CozyState(env) constructor {
 					var fnName = self.popStack();
 					
 					self.pushStack(new CozyFunction(fnName,fnBytecode,argNames,fnHasParams,undefined,self));
-					
-					pc++;
 					break;
 				case COZY_INSTR.POP_DISCARD:
-					var count = bytecode[pc+1];
+					var count = bytecode[++pc+1];
 					
 					for (var i = 0; i < count; i++)
 						self.popStack();
-					
-					pc++;
 					break;
 				case COZY_INSTR.JUMP:
 					var newPC = bytecode[pc+1];
@@ -1558,12 +1573,10 @@ function CozyState(env) constructor {
 					pc = newPC-1;
 					break;
 				case COZY_INSTR.JUMP_IF_FALSE:
-					var newPC = bytecode[pc+1];
+					var newPC = bytecode[++pc];
 					var value = self.popStack();
 					
-					if (value)
-						pc++;
-					else
+					if (!value)
 					{
 						if (!is_numeric(newPC))
 							throw $"Attempt to jump to a non-numeric address of type {typeof(newPC)}";
@@ -1571,7 +1584,7 @@ function CozyState(env) constructor {
 					}
 					break;
 				case COZY_INSTR.JUMP_IF_TRUE:
-					var newPC = bytecode[pc+1];
+					var newPC = bytecode[++pc];
 					var value = self.popStack();
 					
 					if (value)
@@ -1580,11 +1593,9 @@ function CozyState(env) constructor {
 							throw $"Attempt to jump to a non-numeric address of type {typeof(newPC)}";
 						pc = newPC-1;
 					}
-					else
-						pc++;
 					break;
 				case COZY_INSTR.MAKE_LOCAL_CONST:
-					var name = bytecode[pc+1];
+					var name = bytecode[++pc];
 					
 					if (struct_exists(self.dynamicConsts,name) or struct_exists(self.localConsts,name))
 						throw $"Attempt to modify constant {name}";
@@ -1592,12 +1603,10 @@ function CozyState(env) constructor {
 					array_push(localsAdded,name);
 					
 					self.localConsts[$ name] = self.popStack();
-					
-					pc++;
 					break;
 				case COZY_INSTR.IMPORT:
 				case COZY_INSTR.IMPORTONLY:
-					var count = bytecode[pc+1];
+					var count = bytecode[++pc];
 					
 					var fullNameArr = [];
 					for (var i = 0; i < count; i++)
@@ -1614,8 +1623,6 @@ function CozyState(env) constructor {
 					library.applyToState(self,applyChildren);
 					
 					self.restoreAllLocals(prevLocals);
-					
-					pc++;
 					break;
 				case COZY_INSTR.RETURN:
 					var amount = bytecode[pc+1];
@@ -1629,19 +1636,15 @@ function CozyState(env) constructor {
 					pc--;
 					break;
 				case COZY_INSTR.SET_VAR:
-					var name = bytecode[pc+1];
+					var name = bytecode[++pc];
 					var value = self.popStack();
-						
-					self.set(name,value);
 					
-					pc++;
+					self.set(name,value);
 					break;
 				case COZY_INSTR.GET_VAR:
-					var name = bytecode[pc+1];
+					var name = bytecode[++pc];
 					
-					self.pushStack(self.get(name));
-					
-					pc++;
+					self.pushStack(self.getRaw(name));
 					break;
 				case COZY_INSTR.PUSH_STACK_TOP:
 					self.pushStack(self.topStack());
@@ -1654,18 +1657,16 @@ function CozyState(env) constructor {
 					self.pushStack(b);
 					break;
 				case COZY_INSTR.SET_LOCAL:
-					var name = bytecode[pc+1];
+					var name = bytecode[++pc];
 					var value = self.popStack();
 					
 					self.setLocal(name,value);
 					
 					if (struct_exists(self.locals,name))
 						array_push(localsAdded,name);
-					
-					pc++;
 					break;
 				case COZY_INSTR.REMOVE_LOCAL:
-					var name = bytecode[pc+1];
+					var name = bytecode[++pc];
 					
 					if (struct_exists(self.locals,name))
 						struct_remove(self.locals,name);
@@ -1674,11 +1675,9 @@ function CozyState(env) constructor {
 					var localsAddedIndex = array_get_index(localsAdded,name);
 					if (localsAddedIndex >= 0)
 						array_delete(localsAdded,localsAddedIndex,1);
-					
-					pc++;
 					break;
 				case COZY_INSTR.CALL:
-					var maxPushCount = bytecode[pc+1];
+					var maxPushCount = bytecode[++pc];
 					var fn = self.popStack();
 					
 					if (maxPushCount < 0)
@@ -1726,8 +1725,6 @@ function CozyState(env) constructor {
 					var resultCount = min(array_length(result)-1,maxPushCount);
 					for (var i = 0; i < resultCount; i++)
 						self.pushStack(result[i+1]);
-					
-					pc++;
 					break;
 				case COZY_INSTR.GET_PROPERTY:
 					var name = self.popStack();
@@ -1799,7 +1796,7 @@ function CozyState(env) constructor {
 					self.pushStack(arr);
 					break;
 				case COZY_INSTR.NEW_OBJECT:
-					var pushNewObject = bytecode[pc+1];
+					var pushNewObject = bytecode[++pc];
 					
 					/// support for GameMaker constructor functions in the future?
 					var cozyClass = self.popStack();
@@ -1821,10 +1818,9 @@ function CozyState(env) constructor {
 					
 					if (pushNewObject)
 						self.pushStack(object);
-					pc++;
 					break;
 				case COZY_INSTR.WRAP_CLASS:
-					var name = bytecode[pc+1];
+					var name = bytecode[++pc];
 					
 					var classModifiers = self.popStack();
 					var classIsStrict = self.popStack();
@@ -1885,16 +1881,13 @@ function CozyState(env) constructor {
 					}
 					
 					self.pushStack(wrappedClass);
-					
-					pc++;
 					break;
 				case COZY_INSTR.PUSH_STACKFLAG:
-					var value = bytecode[pc+1];
+					var value = bytecode[++pc];
 					if (!is_numeric(value))
 						throw $"Attempt to push a non-numeric stack flag"
 					
 					self.pushStack(new CozyStackFlag(value));
-					pc++;
 					break;
 				case COZY_INSTR.CLASS_INIT_STATIC:
 					var class = self.popStack();
