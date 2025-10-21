@@ -803,21 +803,35 @@ function CozyVariable(value=undefined,name="<NONAME>",getter=undefined,setter=un
 }
 
 /// @param {Bool} removeIfUndefined
-/// @param {Bool} frozen
+/// @param {Bool} strict
 /// @param {String} ownerName
-function CozyVariableContainer(removeIfUndefined=false,frozen=false,ownerName="") constructor {
+function CozyVariableContainer(removeIfUndefined=false,strict=false,ownerName="",useFallbacks=false) constructor {
 	self.variables = {};
 	self.removeIfUndefined = removeIfUndefined;
-	self.frozen = frozen;
+	self.strict = strict;
 	self.ownerName = ownerName;
+	self.useFallbacks = useFallbacks;
 	
 	static exists = function(name) {
 		return struct_exists(self.variables,name);
 	}
 	static get = function(name) {
-		return cozylang_resolve_var(self.getRaw(name));
+		return cozylang_resolve_var_get(self.getRaw(name));
 	}
 	static getRaw = function(name) {
+		if (!self.exists(name) and (self.useFallbacks or self.strict))
+		{
+			if (self.useFallbacks)
+			{
+				if (is_string(name) and self.exists("@"))
+					return self.getRaw("@");
+				if (is_numeric(name) and self.exists("#"))
+					return self.getRaw("#");
+			}
+			if (self.strict)
+				throw $"Variable {name} does not exist in {self.ownerName}";
+		}
+		
 		return self.variables[$ name];
 	}
 	static set = function(name,value) {
@@ -825,8 +839,24 @@ function CozyVariableContainer(removeIfUndefined=false,frozen=false,ownerName=""
 		self.setRaw(name,value);
 	}
 	static setRaw = function(name,value) {
-		if (self.frozen)
-			throw $"Attempt to modify frozen {ownerName}";
+		if (!self.exists(name) and (self.useFallbacks or self.strict))
+		{
+			if (self.useFallbacks)
+			{
+				if (is_string(name) and self.exists("@"))
+				{
+					self.setRaw("@",value);
+					return;
+				}
+				if (is_numeric(name) and self.exists("#"))
+				{
+					self.setRaw("#",value);
+					return;
+				}
+			}
+			if (self.strict)
+				throw $"Variable {name} does not exist in {self.ownerName}";
+		}
 		
 		if (self.removeIfUndefined and is_undefined(value))
 		{
@@ -834,7 +864,11 @@ function CozyVariableContainer(removeIfUndefined=false,frozen=false,ownerName=""
 			return;
 		}
 		
-		self.variables[$ name] = value;
+		var vari = self.getRaw(name);
+		if (is_cozyvariable(vari))
+			value.set(value);
+		else
+			self.variables[$ name] = value;
 	}
 	static remove = function(name) {
 		struct_remove(self.variables,name);
@@ -856,6 +890,13 @@ function CozyVariableContainer(removeIfUndefined=false,frozen=false,ownerName=""
 function cozylang_resolve_var(value) {
 	if (is_cozyvariable(value))
 		return value.value;
+	return value;
+}
+
+/// @param {Any} value
+function cozylang_resolve_var_get(value) {
+	if (is_cozyvariable(value))
+		return value.get();
 	return value;
 }
 
@@ -1360,7 +1401,7 @@ function CozyState(env) constructor {
 	/// @param {String} name
 	/// @param {Any} value
 	static setLocal = function(name,value) {
-		self.locals[$ name] = new CozyVariable(value,name);
+		self.locals[$ name] = value;
 	}
 	/// @param {String} name
 	/// @returns {Any}
