@@ -724,19 +724,45 @@ function CozyVariable(value=undefined,name="<NONAME>",getter=undefined,setter=un
 	self.owner = owner;
 	
 	static get = function() {
+		if (cozylang_is_callable(self.getter))
+		{
+			var result = cozylang_execute(self.setter,[],self.owner);
+			if (array_length(result) < 2 or !result[0])
+				throw $"Setter for variable named {self.name} did not return a value";
+		
+			newValue = result[1];
+		}
+		
 		return self.value;
 	}
-	static set = function(value) {
-		self.value = value;
+	static set = function(newValue) {
+		if (cozylang_is_callable(self.setter))
+		{
+			var result = cozylang_execute(self.setter,[],self.owner);
+			if (result[0])
+			{
+				if (array_length(result) == 1) /// didn't return anything, setter likely handled everything
+					return;
+				else /// returned something! use this value instead
+					newValue = result[1];
+			}
+		}
+		
+		self.value = newValue;
 	}
 	static initialize = function() {
-		var result = cozylang_execute(self.initializer,[],self.owner);
-		if (array_length(result) < 2 or !result[0])
-			throw $"Variable initializer did not return a value";
+		if (cozylang_is_callable(self.initializer))
+		{
+			var result = cozylang_execute(self.initializer,[],self.owner);
+			if (array_length(result) < 2 or !result[0])
+				throw $"Initializer for variable named {self.name} did not return a value";
 		
-		var initValue = result[1];
+			var initValue = result[1];
 		
-		self.value = initValue;
+			self.value = initValue;
+		}
+		else
+			throw $"Tried to initialize variable named {self.name} despite having no initializer";
 	}
 	
 	static clone = function() {
