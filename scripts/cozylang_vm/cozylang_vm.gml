@@ -1601,7 +1601,7 @@ function CozyState(env) constructor {
 					self.pushStack(new CozyFunction(fnName,fnBytecode,argNames,fnHasParams,undefined,self));
 					break;
 				case COZY_INSTR.POP_DISCARD:
-					var count = bytecode[++pc+1];
+					var count = bytecode[++pc];
 					
 					for (var i = 0; i < count; i++)
 						self.popStack();
