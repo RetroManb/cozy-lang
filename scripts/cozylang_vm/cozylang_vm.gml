@@ -96,14 +96,12 @@ function CozyClass(name,staticConstructorFn=undefined,constructorFn=undefined,de
 	self.destructorFn = is_callable(destructorFn) ?
 		method(undefined,destructorFn) :
 		destructorFn;
-	self.functions = {};
-	self.properties = {};
-	self.operators = {};
-	self.statics = statics;
-	self.staticProperties = staticProperties;
+	self.objectVariables = {};
+	self.statics = new CozyVariableContainer(false,true,name,true);
 	self.parentName = parentName;
 	self.isStrict = isStrict;
 	self.modifiers = modifiers;
+	
 	
 	self.owner = owner;
 	self.parent = undefined;
@@ -455,56 +453,27 @@ function CozyObjectProperty(name,object,getter,setter,initializer=undefined,modi
 
 /// @param {Struct.CozyState} owner
 function CozyObject(owner=undefined) constructor {
-	self.variables = {};
-	self.properties = {};
-	self.operators = {};
-	self.prefixOperators = {};
-	self.postfixOperators = {};
+	self.variables = new CozyVariableContainer(false,false,"Object",true);
 	self.class = global.cozylang.baseClass;
-	self.isStrict = false;
 	
 	self.owner = owner;
 	
 	/// @param {String} name
 	/// @returns {Struct.CozyFunction}
 	static getInfixOperator = function(name) {
-		if (!struct_exists(self.operators,name))
-		{
-			/// @feather disable GM1045
-			if (cozylang_is_callable(self.class.operators[$ $"infix-{name}"]))
-				return self.operators[$ $"infix-{name}"];
-			/// @feather enable GM1045
-		}
-		
-		return self.operators[$ name];
+		return self.class.operators[$ $"infix-{name}"];
 	}
 	
 	/// @param {String} name
 	/// @returns {Struct.CozyFunction}
 	static getPrefixOperator = function(name) {
-		if (!struct_exists(self.operators,name))
-		{
-			/// @feather disable GM1045
-			if (cozylang_is_callable(self.class.operators[$ $"prefix-{name}"]))
-				return self.operators[$ $"prefix-{name}"];
-			/// @feather enable GM1045
-		}
-		
-		return self.prefixOperators[$ name];
+		return self.class.operators[$ $"prefix-{name}"];
 	}
 	
 	/// @param {String} name
 	/// @returns {Struct.CozyFunction}
 	static getPostfixOperator = function(name) {
-		if (!struct_exists(self.operators,name))
-		{
-			/// @feather disable GM1045
-			if (cozylang_is_callable(self.class.operators[$ $"postfix-{name}"]))
-				return self.operators[$ $"postfix-{name}"];
-			/// @feather enable GM1045
-		}
-		
-		return self.postfixOperators[$ name];
+		return self.class.operators[$ $"postfix-{name}"];
 	}
 	
 	/// @param {String} name
@@ -513,12 +482,11 @@ function CozyObject(owner=undefined) constructor {
 	/// @returns {Array<Any>}
 	static getInfixOperatorResult = function(name,rhs,state=self.owner) {
 		/// @feather disable GM1045
-		if (!struct_exists(self.operators,name))
+		var op = self.getInfixOperator(name);
+		if (!cozylang_is_callable(op))
 			return [false];
 		
-		var op = self.getInfixOperator(name);
-		
-		var result = cozylang_execute(op,[rhs],state);
+		var result = cozylang_execute(op,[self,rhs],state);
 		if (!result[0])
 			return [true,undefined];
 		
@@ -534,12 +502,11 @@ function CozyObject(owner=undefined) constructor {
 	/// @returns {Array<Any>}
 	static getPrefixOperatorResult = function(name,state=self.owner) {
 		/// @feather disable GM1045
-		if (!struct_exists(self.prefixOperators,name))
+		var op = self.getPrefixOperator(name);
+		if (!cozylang_is_callable(op))
 			return [false];
 		
-		var op = self.getPrefixOperator(name);
-		
-		var result = cozylang_execute(op,[],state);
+		var result = cozylang_execute(op,[self],state);
 		if (!result[0])
 			return [true,undefined];
 		
@@ -555,12 +522,11 @@ function CozyObject(owner=undefined) constructor {
 	/// @returns {Array<Any>}
 	static getPostfixOperatorResult = function(name,state=self.owner) {
 		/// @feather disable GM1045
-		if (!struct_exists(self.postfixOperators,name))
+		var op = self.getPostfixOperator(name);
+		if (!cozylang_is_callable(op))
 			return [false];
 		
-		var op = self.getPrefixOperator(name);
-		
-		var result = cozylang_execute(op,[],state);
+		var result = cozylang_execute(op,[self],state);
 		if (!result[0])
 			return [true,undefined];
 		
@@ -574,87 +540,13 @@ function CozyObject(owner=undefined) constructor {
 	/// @param {String} name
 	/// @param {Struct.CozyState} state
 	static get = function(name,state=self.owner) {
-		__cozylang_check_timeout(state);
-		
-		if (struct_exists(self.properties,name))
-			return self.properties[$ name].get([],state);
-		if (is_string(name) and struct_exists(self.properties,"@") and !struct_exists(self.variables,name))
-			return self.properties[$ "@"].get([name],state);
-		if (is_numeric(name) and struct_exists(self.properties,"#"))
-			return self.properties[$ "#"].get([name],state);
-		
-		if (self.isStrict and !(struct_exists(self.variables,name) or struct_exists(self.properties,name)))
-		{
-			if (is_cozyclass(self.class) and (struct_exists(self.class.statics,name) or struct_exists(self.class.staticProperties,name)))
-				return self.class.getStatic(name,state);
-			throw $"Property {name} does not exist in object";
-		}
-		
-		if (struct_exists(self.variables,name))
-			return self.variables[$ name];
-		
-		if (is_cozyclass(self.class) and (struct_exists(self.class.statics,name) or struct_exists(self.class.staticProperties,name)))
-		{
-			var value = self.class.getStatic(name,state);
-			if (is_cozyfunc(value))
-				value.target = self;
-			return value;
-		}
+		self.variables.get(name,self.owner);
 	}
 	/// @param {String} name
 	/// @param {Any} value
 	/// @param {Struct.CozyState} state
 	static set = function(name,value,state=self.owner) {
-		__cozylang_check_timeout(state);
-		
-		if (struct_exists(self.properties,name))
-		{
-			self.properties[$ name].set([value],state);
-			return;
-		}
-		if (is_string(name) and struct_exists(self.properties,"@") and !struct_exists(self.variables,name))
-		{
-			self.properties[$ "@"].set([name,value],state);
-			return;
-		}
-		if (is_numeric(name) and struct_exists(self.properties,"#"))
-		{
-			self.properties[$ "#"].set([name,value],state);
-			return;
-		}
-		
-		if (self.isStrict and !(struct_exists(self.variables,name) or struct_exists(self.properties,name)))
-		{
-			if (is_cozyclass(self.class) and (struct_exists(self.class.statics,name) or struct_exists(self.class.staticProperties,name)))
-			{
-				self.class.setStatic(name,value,state);
-				return;
-			}
-			throw $"Property {name} does not exist in object";
-		}
-		
-		if (is_cozyclass(self.class) and (struct_exists(self.class.statics,name) or struct_exists(self.class.staticProperties,name)))
-		{
-			self.class.setStatic(name,value,state);
-			return;
-		}
-		
-		self.variables[$ name] = value;
-	}
-	
-	/// @param {String} name
-	/// @param {Any} value
-	static setConstant = function(name,value) {
-		self.properties[$ name] = new CozyObjectProperty(name,self,undefined,undefined);
-		self.properties[$ name].getter = method({const: value},function() {
-			return const;
-		});
-	}
-	
-	/// @param {String} name
-	/// @param {Function|Struct.CozyFunction} value
-	static setDynamicConstant = function(name,value) {
-		self.properties[$ name] = new CozyObjectProperty(name,self,value,undefined);
+		self.variables.set(name,value,self.owner);
 	}
 	
 	static toString = function() {
@@ -687,13 +579,7 @@ function CozyObject(owner=undefined) constructor {
 			}
 		}
 		
-		var struct = variable_clone(self.variables,1);
-		
-		var propertyNames = struct_get_names(self.properties);
-		for (var i = 0; i < array_length(propertyNames); i++)
-			struct[$ propertyNames[i]] = "<Property>";
-		
-		return string(struct);
+		return string(self.variables);
 	}
 }
 
@@ -727,11 +613,11 @@ function CozyVariable(value=undefined,name="<NONAME>",getter=undefined,setter=un
 		return array_get_index(self.modifiers,name) >= 0;
 	}
 	
-	static get = function() {
+	static get = function(state=self.owner) {
 		if (cozylang_is_callable(self.getter))
 		{
-			var result = cozylang_execute(self.setter,[],self.owner);
-			if (array_length(result) < 2 or !result[0])
+			var result = cozylang_execute(self.setter,[],state);
+			if (array_length(result) < 2)
 				throw $"Getter for variable named {self.name} did not return a value";
 		
 			newValue = result[1];
@@ -739,10 +625,10 @@ function CozyVariable(value=undefined,name="<NONAME>",getter=undefined,setter=un
 		
 		return self.value;
 	}
-	static set = function(newValue) {
+	static set = function(newValue,state=self.owner) {
 		if (cozylang_is_callable(self.setter))
 		{
-			var result = cozylang_execute(self.setter,[],self.owner);
+			var result = cozylang_execute(self.setter,[],state);
 			if (result[0])
 			{
 				if (array_length(result) == 1) /// didn't return anything, setter likely handled everything
@@ -754,11 +640,11 @@ function CozyVariable(value=undefined,name="<NONAME>",getter=undefined,setter=un
 		
 		self.value = newValue;
 	}
-	static initialize = function() {
+	static initialize = function(state=self.owner) {
 		if (!cozylang_is_callable(self.initializer))
 			throw $"Tried to initialize variable named {self.name} despite having no initializer";
 		
-		var result = cozylang_execute(self.initializer,[],self.owner);
+		var result = cozylang_execute(self.initializer,[],state);
 		if (array_length(result) < 2 or !result[0])
 			throw $"Initializer for variable named {self.name} did not return a value";
 		
@@ -811,12 +697,13 @@ function CozyVariableContainer(removeIfUndefined=false,strict=false,ownerName=""
 	self.strict = strict;
 	self.ownerName = ownerName;
 	self.useFallbacks = useFallbacks;
+	self.staticVarContainer = undefined;
 	
 	static exists = function(name) {
 		return struct_exists(self.variables,name);
 	}
-	static get = function(name) {
-		return cozylang_resolve_var_get(self.getRaw(name));
+	static get = function(name,state=undefined) {
+		return cozylang_resolve_var_get(self.getRaw(name),state);
 	}
 	static getRaw = function(name) {
 		if (!self.exists(name) and (self.useFallbacks or self.strict))
@@ -828,17 +715,19 @@ function CozyVariableContainer(removeIfUndefined=false,strict=false,ownerName=""
 				if (is_numeric(name) and self.exists("#"))
 					return self.getRaw("#");
 			}
+			if (is_struct(self.staticVarContainer) and self.staticVarContainer.exists(name))
+				return self.staticVarContainer.getRaw(name);
 			if (self.strict)
 				throw $"Variable {name} does not exist in {self.ownerName}";
 		}
 		
 		return self.variables[$ name];
 	}
-	static set = function(name,value) {
+	static set = function(name,value,state=undefined) {
 		value = cozylang_resolve_var(value);
-		self.setRaw(name,value);
+		self.setRaw(name,value,state);
 	}
-	static setRaw = function(name,value) {
+	static setRaw = function(name,value,state=undefined) {
 		if (!self.exists(name) and (self.useFallbacks or self.strict))
 		{
 			if (self.useFallbacks)
@@ -854,6 +743,11 @@ function CozyVariableContainer(removeIfUndefined=false,strict=false,ownerName=""
 					return;
 				}
 			}
+			if (is_struct(self.staticVarContainer) and self.staticVarContainer.exists(name))
+			{
+				self.staticVarContainer.setRaw(name,value);
+				return;
+			}
 			if (self.strict)
 				throw $"Variable {name} does not exist in {self.ownerName}";
 		}
@@ -866,7 +760,7 @@ function CozyVariableContainer(removeIfUndefined=false,strict=false,ownerName=""
 		
 		var vari = self.getRaw(name);
 		if (is_cozyvariable(vari))
-			value.set(value);
+			value.set(value,state);
 		else
 			self.variables[$ name] = value;
 	}
@@ -894,9 +788,10 @@ function cozylang_resolve_var(value) {
 }
 
 /// @param {Any} value
-function cozylang_resolve_var_get(value) {
+/// @param {Struct.CozyState} state
+function cozylang_resolve_var_get(value,state) {
 	if (is_cozyvariable(value))
-		return value.get();
+		return value.get(state);
 	return value;
 }
 
