@@ -83,9 +83,8 @@ enum COZY_STACKFLAG {
 /// @param {Bool} isStrict
 /// @param {Array<String>} modifiers
 /// @param {Struct} statics
-/// @param {Struct} staticProperties
 /// @param {Struct.CozyState} owner
-function CozyClass(name,staticConstructorFn=undefined,constructorFn=undefined,destructorFn=undefined,parentName="",isStrict=false,modifiers=[],statics={},staticProperties={},owner=undefined) constructor {
+function CozyClass(name,staticConstructorFn=undefined,constructorFn=undefined,destructorFn=undefined,parentName="",isStrict=false,modifiers=[],statics={},owner=undefined) constructor {
 	self.name = name;
 	self.staticConstructorFn = is_callable(staticConstructorFn) ?
 		method(undefined,staticConstructorFn) :
@@ -102,6 +101,9 @@ function CozyClass(name,staticConstructorFn=undefined,constructorFn=undefined,de
 	self.isStrict = isStrict;
 	self.modifiers = modifiers;
 	
+	var staticNames = struct_get_names(statics);
+	for (var i = 0, n = array_length(staticNames); i < n; i++)
+		self.statics.variables[$ staticNames[i]] = statics[$ staticNames[i]];
 	
 	self.owner = owner;
 	self.parent = undefined;
@@ -112,28 +114,6 @@ function CozyClass(name,staticConstructorFn=undefined,constructorFn=undefined,de
 		
 		/// get parent
 		self.parent = self.getParentClass(self.owner);
-		
-		/// static property initializers
-		var staticNames = struct_get_names(self.staticProperties);
-		for (var i = 0, n = array_length(staticNames); i < n; i++)
-		{
-			var staticName = staticNames[i];
-			var value = self.staticProperties[$ staticName];
-		
-			if (is_cozyproperty(value) and cozylang_is_callable(value.initializer))
-			{
-				var result = cozylang_execute(value.initializer,[],self.owner);
-			
-				if (!result[0])
-					continue;
-				if (array_length(result) == 1)
-					throw $"Static property {staticName} initializer didn't return anything";
-			
-				self.statics[$ staticName] = result[1];
-			}
-			else
-				self.statics[$ staticName] = undefined;
-		}
 		
 		/// static constructor
 		if (cozylang_is_callable(self.staticConstructorFn))
@@ -188,20 +168,7 @@ function CozyClass(name,staticConstructorFn=undefined,constructorFn=undefined,de
 	static getStatic = function(name,state=self.owner) {
 		__cozylang_check_timeout(state);
 		
-		if (is_cozyproperty(self.staticProperties[$ name]) and !cozylang_is_callable(self.staticProperties[$ name].initializer) and cozylang_is_callable(self.staticProperties[$ name].getter))
-			return self.staticProperties[$ name].get([],state);
-		if (is_string(name) and is_cozyproperty(self.staticProperties[$ "@"]) and !struct_exists(self.staticProperties,name))
-			return self.staticProperties[$ "@"].get([name],state);
-		if (is_numeric(name) and is_cozyproperty(self.staticProperties[$ "#"]))
-			return self.staticProperties[$ "#"].get([name],state);
-		
-		if (self.isStrict and !struct_exists(self.statics,name))
-			throw $"Property {name} does not exist in class";
-		
-		if (is_cozyfunc(self.statics[$ name]))
-			self.statics[$ name].target = undefined;
-		
-		return self.statics[$ name];
+		return self.statics.get(name,state);
 	}
 	
 	/// @param {String} name
@@ -210,26 +177,7 @@ function CozyClass(name,staticConstructorFn=undefined,constructorFn=undefined,de
 	static setStatic = function(name,value,state=self.owner) {
 		__cozylang_check_timeout(state);
 		
-		if (is_cozyproperty(self.staticProperties[$ name]) and !cozylang_is_callable(self.staticProperties[$ name].initializer) and cozylang_is_callable(self.staticProperties[$ name].setter))
-		{
-			self.staticProperties[$ name].set([value],state);
-			return;
-		}
-		if (is_string(name) and is_cozyproperty(self.staticProperties[$ "@"]) and !struct_exists(self.staticProperties,name))
-		{
-			self.staticProperties[$ "@"].set([name,value],state);
-			return;
-		}
-		if (is_numeric(name) and is_cozyproperty(self.staticProperties[$ "#"]))
-		{
-			self.staticProperties[$ "#"].set([name,value],state);
-			return;
-		}
-		
-		if (!struct_exists(self.statics,name))
-			throw $"Property {name} does not exist in class";
-		
-		self.statics[$ name] = value;
+		self.statics.set(name,value,state);
 	}
 	
 	/// @param {Array<Any>} args
@@ -260,102 +208,42 @@ function CozyClass(name,staticConstructorFn=undefined,constructorFn=undefined,de
 		else
 			object = parentClass.newObject(args,state,__visited,state.env.flags.alwaysCallParentConstructor);
 		
-		/// add operators
-		var operatorNames = struct_get_names(self.operators);
-		for (var i = 0, n = array_length(operatorNames); i < n; i++)
-		{
-			var name = operatorNames[i];
-			var operator = self.operators[$ name];
-			
-			if (!cozylang_is_callable(operator))
-				throw $"Non-callable operator found in class {self.name}?";
-			
-			if (is_callable(operator))
-				operator = method(object,operator);
-			else if (is_cozyfunc(operator))
-			{
-				operator = variable_clone(operator,1);
-				operator.target = object;
-			}
-			
-			var firstThree = string_copy(name,1,3);
-			var lastChars = string_copy(name,4,string_length(name)-3);
-			switch (firstThree)
-			{
-				case "in$":
-					object.operators[$ lastChars] = operator;
-					break;
-				case "pr$":
-					object.prefixOperators[$ lastChars] = operator;
-					break;
-				case "po$":
-					object.postfixOperators[$ lastChars] = operator;
-					break;
-			}
-		}
+		/// add variables
+		var variableInitializers = {};
 		
-		/// add functions
-		var functionNames = struct_get_names(self.functions);
-		for (var i = 0, n = array_length(functionNames); i < n; i++)
+		var variableNames = struct_get_names(self.objectVariables);
+		for (var i = 0, n = array_length(variableNames); i < n; i++)
 		{
-			var name = functionNames[i];
-			var func = self.functions[$ name];
+			var name = variableNames[i];
+			var variable = self.objectVariables[$ name].clone();
 			
-			if (is_callable(func))
-				func = method(object,func);
-			else if (is_cozyfunc(func))
-			{
-				func = variable_clone(func,1);
-				func.target = object;
-			}
-			
-			object.variables[$ name] = func;
-		}
-		
-		/// add properties
-		var propertyInitializers = {};
-		
-		var propertyNames = struct_get_names(self.properties);
-		for (var i = 0, n = array_length(propertyNames); i < n; i++)
-		{
-			var name = propertyNames[i];
-			var property = self.properties[$ name];
-			
-			if (is_cozyfunc(property.getter))
-				property.getter.target = object;
-			if (is_cozyfunc(property.setter))
-				property.setter.target = object;
-			if (is_cozyfunc(property.initializer))
-				property.initializer.target = object;
-			
-			if (cozylang_is_callable(property.initializer))
+			if (cozylang_is_callable(variable.initializer))
 			{
 				/// initializer
-				propertyInitializers[$ name] = property.initializer;
+				variableInitializers[$ name] = variable.initializer;
 			}
 			
-			if (!cozylang_is_callable(property.getter) and !cozylang_is_callable(property.setter))
+			if (!cozylang_is_callable(variable.getter) and !cozylang_is_callable(variable.setter))
 			{
-				object.variables[$ name] = undefined;
+				variable.value = undefined;
 				continue;
 			}
 			
-			property = variable_clone(property,1);
-			property.object = object;
+			variable.setObject(object);
 			
-			object.properties[$ name] = property;
+			object.variables.setRaw(name,variable,self.owner);
 		}
 		
 		object.class = self;
-		if (!object.isStrict)
-			object.isStrict = self.isStrict;
+		object.variables.strict = self.isStrict;
+		object.variables.ownerName = self.name;
 		
-		/// call property initializers
-		var initializerNames = struct_get_names(propertyInitializers);
+		/// call variable initializers
+		var initializerNames = struct_get_names(variableInitializers);
 		for (var i = 0, n = array_length(initializerNames); i < n; i++)
 		{
 			var name = initializerNames[i];
-			var initializer = variable_clone(propertyInitializers[$ name],1);
+			var initializer = variable_clone(variableInitializers[$ name],1);
 			if (is_cozyfunc(initializer))
 				initializer.target = object;
 			
@@ -375,7 +263,7 @@ function CozyClass(name,staticConstructorFn=undefined,constructorFn=undefined,de
 			
 			delete initializer;
 			
-			object.variables[$ name] = returnValue;
+			object.variables.set(name,returnValue,self.owner);
 		}
 		
 		if (__callConstructor and cozylang_is_callable(self.constructorFn))
@@ -453,7 +341,7 @@ function CozyObjectProperty(name,object,getter,setter,initializer=undefined,modi
 
 /// @param {Struct.CozyState} owner
 function CozyObject(owner=undefined) constructor {
-	self.variables = new CozyVariableContainer(false,false,"Object",true);
+	self.variables = new CozyVariableContainer(false,false,"Object",true,self);
 	self.class = global.cozylang.baseClass;
 	
 	self.owner = owner;
@@ -540,7 +428,7 @@ function CozyObject(owner=undefined) constructor {
 	/// @param {String} name
 	/// @param {Struct.CozyState} state
 	static get = function(name,state=self.owner) {
-		self.variables.get(name,self.owner);
+		return self.variables.get(name,self.owner);
 	}
 	/// @param {String} name
 	/// @param {Any} value
@@ -614,16 +502,18 @@ function CozyVariable(value=undefined,name="<NONAME>",getter=undefined,setter=un
 	}
 	
 	static get = function(state=self.owner) {
+		var value = self.value;
+		
 		if (cozylang_is_callable(self.getter))
 		{
 			var result = cozylang_execute(self.setter,[],state);
 			if (array_length(result) < 2)
 				throw $"Getter for variable named {self.name} did not return a value";
 		
-			newValue = result[1];
+			value = result[1];
 		}
 		
-		return self.value;
+		return value;
 	}
 	static set = function(newValue,state=self.owner) {
 		if (cozylang_is_callable(self.setter))
@@ -691,12 +581,15 @@ function CozyVariable(value=undefined,name="<NONAME>",getter=undefined,setter=un
 /// @param {Bool} removeIfUndefined
 /// @param {Bool} strict
 /// @param {String} ownerName
-function CozyVariableContainer(removeIfUndefined=false,strict=false,ownerName="",useFallbacks=false) constructor {
+/// @param {Bool} useFallbacks
+/// @param {Struct.CozyObject} object
+function CozyVariableContainer(removeIfUndefined=false,strict=false,ownerName="",useFallbacks=false,object=undefined) constructor {
 	self.variables = {};
 	self.removeIfUndefined = removeIfUndefined;
 	self.strict = strict;
 	self.ownerName = ownerName;
 	self.useFallbacks = useFallbacks;
+	self.object = object;
 	self.staticVarContainer = undefined;
 	
 	static exists = function(name) {
@@ -760,9 +653,9 @@ function CozyVariableContainer(removeIfUndefined=false,strict=false,ownerName=""
 		
 		var vari = self.getRaw(name);
 		if (is_cozyvariable(vari))
-			value.set(value,state);
+			vari.set(value,state);
 		else
-			self.variables[$ name] = value;
+			self.variables[$ name] = new CozyVariable(value,name,undefined,undefined,undefined,[],self.object,state);
 	}
 	static remove = function(name) {
 		struct_remove(self.variables,name);
@@ -1634,6 +1527,7 @@ function CozyState(env) constructor {
 					```
 					
 					*/
+					
 					if (!is_struct(fn) and !is_method(fn))
 					{
 						if (is_numeric(fn))
@@ -1695,7 +1589,7 @@ function CozyState(env) constructor {
 					var struct = undefined;
 					if (self.env.flags.structLiteralsAreCozyObjects)
 					{
-						struct = global.cozylang.baseClass.newObject();
+						struct = global.cozylang.baseClass.newObject([],self);
 						for (var i = 0, n = array_length(arr); i < n; i += 2)
 						{
 							var name = arr[i];
@@ -1764,11 +1658,8 @@ function CozyState(env) constructor {
 					var classStaticConstructor = self.popStack();
 					var classConstructor = self.popStack();
 					var classDestructor = self.popStack();
-					var classFunctions = self.popStack();
-					var classProperties = self.popStack();
-					var classOperators = self.popStack();
+					var classVariables = self.popStack();
 					var classStatics = self.popStack();
-					var classStaticProperties = self.popStack();
 					
 					var wrappedClass = new CozyClass(
 						name,
@@ -1779,41 +1670,21 @@ function CozyState(env) constructor {
 						classIsStrict,
 						classModifiers,
 						classStatics,
-						classStaticProperties,
 						self
 					);
 					
-					// add functions
-					for (var i = 0, n = array_length(classFunctions); i < n; i++)
+					// add variables
+					for (var i = 0, n = array_length(classVariables); i < n; i++)
 					{
-						var fn = classFunctions[i];
-						var fnName = string_split(fn.name,".")[1];
-						fn.owner = self;
+						var variable = classVariables[i];
+						if (is_cozyfunc(variable.getter))
+							variable.getter.owner = self;
+						if (is_cozyfunc(variable.setter))
+							variable.setter.owner = self;
+						if (is_cozyfunc(variable.initializer))
+							variable.initializer.owner = self;
 						
-						wrappedClass.functions[$ fnName] = fn;
-					}
-					
-					// add properties
-					for (var i = 0, n = array_length(classProperties); i < n; i++)
-					{
-						var property = classProperties[i];
-						if (is_cozyfunc(property.getter))
-							property.getter.owner = self;
-						if (is_cozyfunc(property.setter))
-							property.setter.owner = self;
-						if (is_cozyfunc(property.initializer))
-							property.initializer.owner = self;
-						wrappedClass.properties[$ property.name] = property;
-					}
-					
-					// add operators
-					var classOperatorNames = struct_get_names(classOperators);
-					for (var i = 0, n = array_length(classOperatorNames); i < n; i++)
-					{
-						var operatorName = classOperatorNames[i];
-						var operator = classOperators[$ operatorName];
-						operator.owner = self;
-						wrappedClass.operators[$ operatorName] = operator;
+						wrappedClass.objectVariables[$ variable.name] = variable;
 					}
 					
 					self.pushStack(wrappedClass);

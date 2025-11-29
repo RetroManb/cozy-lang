@@ -2804,7 +2804,6 @@ function CozyCompiler(env) constructor {
 		}
 		
 		var classStatics = {};
-		var classStaticProperties = {};
 		
 		/// operators
 		var operatorStruct = {};
@@ -2874,13 +2873,12 @@ function CozyCompiler(env) constructor {
 			var propModifiers = propModifiersNode.getAllChildrenValues();
 			
 			var isStatic = array_get_index(propModifiers,"static") >= 0;
+			if (classIsStatic and !isStatic)
+				throw $"Non-static property {propName} found in static class {className}";
 			
 			var propName = propertyNode.value;
 			var propGetter = undefined;
 			var propSetter = undefined;
-			
-			if (classIsStatic and !isStatic)
-				throw $"Non-static property {propName} found in static class {className}";
 			
 			for (var j = 2, n2 = array_length(propertyNode.children); j < n2; j++)
 			{
@@ -2963,12 +2961,12 @@ function CozyCompiler(env) constructor {
 				propInitializerFn = new CozyFunction($"{className}.{propName}.init",fnBytecode,argNames,false);
 			}
 			
-			var wrappedProperty = new CozyObjectProperty(propName,undefined,propGetterFn,propSetterFn,propInitializerFn,propModifiers);
+			var wrappedVariable = new CozyVariable(undefined,propName,propGetterFn,propSetterFn,propInitializerFn,propModifiers);
 			
 			if (!isStatic)
-				array_push(propertyArr,wrappedProperty);
+				array_push(propertyArr,wrappedVariable);
 			else
-				classStaticProperties[$ propName] = wrappedProperty;
+				classStatics[$ propName] = wrappedVariable;
 		}
 		
 		/// functions
@@ -3012,21 +3010,15 @@ function CozyCompiler(env) constructor {
 			var wrappedFunction = new CozyFunction($"{className}.{fnName}",fnBytecode,argNames,fnHasParams);
 			
 			if (!isStatic)
-				array_push(funcArr,wrappedFunction);
+				array_push(propertyArr,new CozyVariable(wrappedFunction,fnName));
 			else
 				classStatics[$ fnName] = wrappedFunction;
 		}
 		
 		bytecode.push(COZY_INSTR.PUSH_CONST);
-		bytecode.push(classStaticProperties);
-		bytecode.push(COZY_INSTR.PUSH_CONST);
 		bytecode.push(classStatics);
 		bytecode.push(COZY_INSTR.PUSH_CONST);
-		bytecode.push(operatorStruct);
-		bytecode.push(COZY_INSTR.PUSH_CONST);
 		bytecode.push(propertyArr);
-		bytecode.push(COZY_INSTR.PUSH_CONST);
-		bytecode.push(funcArr);
 		
 		/// destructor
 		if (is_undefined(destructorNode))
