@@ -209,29 +209,29 @@ function CozyClass(name,staticConstructorFn=undefined,constructorFn=undefined,de
 			object = parentClass.newObject(args,state,__visited,state.env.flags.alwaysCallParentConstructor);
 		
 		/// add variables
-		var variableInitializers = {};
-		
 		var variableNames = struct_get_names(self.objectVariables);
 		for (var i = 0, n = array_length(variableNames); i < n; i++)
 		{
 			var name = variableNames[i];
 			var variable = self.objectVariables[$ name].clone();
+			variable.state = state;
 			
 			if (cozylang_is_callable(variable.initializer))
 			{
 				/// initializer
-				variableInitializers[$ name] = variable.initializer;
 			}
 			
-			if (!cozylang_is_callable(variable.getter) and !cozylang_is_callable(variable.setter))
+			if (!(cozylang_is_callable(variable.getter) or is_undefined(variable.getter))
+				and !(cozylang_is_callable(variable.setter) or is_undefined(variable.setter)))
 			{
 				variable.value = undefined;
-				continue;
 			}
+			else if (is_cozyfunc(variable.value))
+				variable.value.owner = state;
 			
 			variable.setObject(object);
 			
-			object.variables.setRaw(name,variable,self.owner);
+			object.variables.setRaw(name,variable,state);
 		}
 		
 		object.class = self;
@@ -239,33 +239,16 @@ function CozyClass(name,staticConstructorFn=undefined,constructorFn=undefined,de
 		object.variables.ownerName = self.name;
 		
 		/// call variable initializers
-		var initializerNames = struct_get_names(variableInitializers);
-		for (var i = 0, n = array_length(initializerNames); i < n; i++)
+		for (var i = 0, n = array_length(variableNames); i < n; i++)
 		{
-			var name = initializerNames[i];
-			var initializer = variable_clone(variableInitializers[$ name],1);
-			if (is_cozyfunc(initializer))
-				initializer.target = object;
+			var name = variableNames[i];
+			var variable = object.variables.variables[$ name];
 			
-			var result = cozylang_execute(initializer,[],state);
-			if (!result[0])
-			{
-				delete initializer;
-				continue;
-			}
-			if (array_length(result) == 1)
-			{
-				delete initializer;
-				throw $"Property {name} initializer didn't return anything";
-			}
-			
-			var returnValue = result[1];
-			
-			delete initializer;
-			
-			object.variables.set(name,returnValue,self.owner);
+			if (cozylang_is_callable(variable.initializer))
+				variable.initialize(state);
 		}
 		
+		/// call constructor
 		if (__callConstructor and cozylang_is_callable(self.constructorFn))
 		{
 			var constructorFn = variable_clone(self.constructorFn,1);
@@ -440,7 +423,13 @@ function CozyObject(owner=undefined) constructor {
 	static toString = function() {
 		var state = self.owner ?? array_last(global.cozylang.stateStack);
 		
-		var toStringFn = self.variables[$ "ToString"];
+		var toStringFn = undefined;
+		try {
+			toStringFn = self.variables.get("ToString");
+		}
+		catch (e) {
+			toStringFn = undefined;
+		}
 		if (!is_cozyfunc(toStringFn) and is_cozyclass(self.class))
 		{
 			var temp;
@@ -467,7 +456,15 @@ function CozyObject(owner=undefined) constructor {
 			}
 		}
 		
-		return string(self.variables);
+		var cln = {};
+		var names = self.variables.allNames();
+		for (var i = 0, n = array_length(names); i < n; i++)
+			cln[$ names[i]] = self.variables[$ names[i]];
+		
+		var str = string(cln);
+		delete cln;
+		
+		return str;
 	}
 }
 
@@ -506,7 +503,7 @@ function CozyVariable(value=undefined,name="<NONAME>",getter=undefined,setter=un
 		
 		if (cozylang_is_callable(self.getter))
 		{
-			var result = cozylang_execute(self.setter,[],state);
+			var result = cozylang_execute(self.getter,[],state);
 			if (array_length(result) < 2)
 				throw $"Getter for variable named {self.name} did not return a value";
 		
@@ -564,6 +561,9 @@ function CozyVariable(value=undefined,name="<NONAME>",getter=undefined,setter=un
 			self.setter.target = object;
 		if (is_cozyfunc(self.initializer))
 			self.initializer.target = object;
+		
+		if (is_cozyfunc(self.value))
+			self.value.target = object;
 	}
 	
 	static toString = function() {
@@ -652,8 +652,10 @@ function CozyVariableContainer(removeIfUndefined=false,strict=false,ownerName=""
 		}
 		
 		var vari = self.getRaw(name);
-		if (is_cozyvariable(vari))
+		if (is_cozyvariable(vari) and !is_cozyvariable(value))
 			vari.set(value,state);
+		else if (is_cozyvariable(value))
+			self.variables[$ name] = value;
 		else
 			self.variables[$ name] = new CozyVariable(value,name,undefined,undefined,undefined,[],self.object,state);
 	}
@@ -1031,7 +1033,7 @@ function CozyState(env) constructor {
 	/// @param {Any} value
 	static set = function(name,value) {
 		value = cozylang_resolve_var(value);
-		if (struct_exists(self.consts,name) or struct_exists(self.dynamicConsts,name) or struct_exists(self.localConsts,name))
+		if (self.consts.exists(name) or struct_exists(self.dynamicConsts,name) or struct_exists(self.localConsts,name))
 			throw $"Attempt to modify constant variable {name}";
 		if (struct_exists(self.locals,name))
 			self.setLocal(name,value);
@@ -1046,7 +1048,7 @@ function CozyState(env) constructor {
 			return self.getDynamicConst(name);
 		else if (struct_exists(self.localConsts,name))
 			return self.getLocalConst(name);
-		else if (struct_exists(self.consts,name))
+		else if (self.consts.exists(name))
 			return self.getConst(name);
 		else if (struct_exists(self.locals,name))
 			return self.getLocal(name);
@@ -1057,7 +1059,7 @@ function CozyState(env) constructor {
 	/// @param {String} name
 	/// @param {Any} value
 	static setRaw = function(name,value) {
-		if (struct_exists(self.consts,name) or struct_exists(self.dynamicConsts,name) or struct_exists(self.localConsts,name))
+		if (self.consts.exists(name) or struct_exists(self.dynamicConsts,name) or struct_exists(self.localConsts,name))
 			throw $"Attempt to modify constant variable {name}";
 		if (struct_exists(self.locals,name))
 			self.setLocal(name,value);
@@ -1072,7 +1074,7 @@ function CozyState(env) constructor {
 			return self.getDynamicConst(name);
 		else if (struct_exists(self.localConsts,name))
 			return self.getLocalConst(name);
-		else if (struct_exists(self.consts,name))
+		else if (self.consts.exists(name))
 			return self.getConstRaw(name);
 		else if (struct_exists(self.locals,name))
 			return self.getLocal(name);
@@ -1363,10 +1365,10 @@ function CozyState(env) constructor {
 				case COZY_INSTR.MAKE_CONST:
 					var name = bytecode[++pc];
 					
-					if (struct_exists(self.consts,name) or struct_exists(self.dynamicConsts,name))
+					if (self.consts.exists(name) or struct_exists(self.dynamicConsts,name))
 						throw $"Attempt to modify constant {name}";
 					
-					self.consts.set(self.popStack());
+					self.consts.set(name,self.popStack());
 					break;
 				case COZY_INSTR.WRAP_FUNCTION:
 					var fnArgCount = bytecode[++pc];
@@ -1507,6 +1509,8 @@ function CozyState(env) constructor {
 					break;
 				case COZY_INSTR.CALL:
 					var maxPushCount = bytecode[++pc];
+					
+					self.printStack();
 					var fn = self.popStack();
 					
 					if (maxPushCount < 0)
@@ -2207,11 +2211,24 @@ function CozyState(env) constructor {
 					
 					var class = object.class;
 					
-					if (cozylang_is_callable(class.destructorFn))
+					var destructors = [];
+					if (self.env.flags.alwaysCallParentDestructor)
 					{
-						var destructorFn = variable_clone(class.destructorFn,1);
-						if (is_cozyfunc(destructorFn))
-							destructorFn.target = object;
+						var parent = class;
+						while (is_cozyclass(parent))
+						{
+							if (is_cozyfunc(parent.destructorFn))
+								array_push(destructors,parent.destructorFn);
+							parent = parent.parent;
+						}
+					}
+					else
+						array_push(destructors,class.destructorFn);
+					
+					for (var i = array_length(destructors)-1; i >= 0; i--)
+					{
+						var destructorFn = variable_clone(destructors[i],1);
+						destructorFn.target = object;
 						
 						cozylang_execute(destructorFn,[],self);
 		

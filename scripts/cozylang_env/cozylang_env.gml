@@ -324,6 +324,9 @@ function CozyEnvironmentFlags() constructor {
 		/// Always call the parent constructors on classes?
 	self.alwaysCallParentConstructor = true;
 	
+		/// Always call the parent destructors on classes?
+	self.alwaysCallParentDestructor = true;
+	
 		/// Use __CozyGet and __CozySet methods on structs when getting/setting a
 		/// variable from a struct?
 	self.structGetterSetters = true;
