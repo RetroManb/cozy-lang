@@ -9,6 +9,7 @@ class MyClass : TestParent {
 	
 	property Hello {
 		{
+			print("Hello.get:",this);
 			return this._hello;
 		}
 		value {
@@ -48,7 +49,8 @@ class MyClass : TestParent {
 	constructor() {
 		this._hello = "World";
 		
-		print(this);
+		print(this._hello);
+		print(this.Hello);
 	}
 	/// this is ONLY called when the ` delete ` keyword is used, not on garbage collection, be weary...
 	destructor {
@@ -56,7 +58,7 @@ class MyClass : TestParent {
 	}
 	
 	func MyFunc() {
-		print(this);
+		print("Hello!");
 	}
 	
 	
@@ -65,16 +67,22 @@ class MyClass : TestParent {
 
 class TestChild : MyClass {
 	property childProperty = "I'm from child";
+	
+	destructor {
+		print("Bye bye 2!");
+	}
 }
 
 local a = new TestParent();
 
+print(a);
 print(a.parentProperty);
 
 delete a;
 
 local b = new MyClass();
 
+print(b);
 print(b.parentProperty);
 b.MyFunc();
 
@@ -82,6 +90,7 @@ delete b;
 
 local c = new TestChild();
 
+print(c);
 print(c.parentProperty);
 c.MyFunc();
 print(c.childProperty);

@@ -1,14 +1,11 @@
 import cozy.std;
 
-class !Pao {
-	
-	
+class Pao {
 	func MyFunction() {
 		return 2;
 	}
 }
 
 local object = new Pao();
-object.Pao = 2;
 print(object.MyFunction());
 

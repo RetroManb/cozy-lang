@@ -2,7 +2,7 @@
   "$GMProject":"v1",
   "%Name":"Cozy_Lang",
   "AudioGroups":[
-    {"$GMAudioGroup":"","%Name":"audiogroup_default","name":"audiogroup_default","resourceType":"GMAudioGroup","resourceVersion":"2.0","targets":-1,},
+    {"$GMAudioGroup":"v1","%Name":"audiogroup_default","exportDir":"","name":"audiogroup_default","resourceType":"GMAudioGroup","resourceVersion":"2.0","targets":-1,},
   ],
   "configs":{
     "children":[],
@@ -39,6 +39,7 @@
     {"$GMIncludedFile":"","%Name":"gml_random.cozy","CopyToMask":-1,"filePath":"datafiles","name":"gml_random.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"gml_random.cz","CopyToMask":-1,"filePath":"datafiles","name":"gml_random.cz","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"hello_world.cozy","CopyToMask":-1,"filePath":"datafiles","name":"hello_world.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
+    {"$GMIncludedFile":"","%Name":"idea.cozy","CopyToMask":-1,"filePath":"datafiles","name":"idea.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"if_expression.cozy","CopyToMask":-1,"filePath":"datafiles","name":"if_expression.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"if_optimization_test.cozy","CopyToMask":-1,"filePath":"datafiles","name":"if_optimization_test.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"if.cozy","CopyToMask":-1,"filePath":"datafiles","name":"if.cozy","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
@@ -70,7 +71,7 @@
   "isEcma":false,
   "LibraryEmitters":[],
   "MetaData":{
-    "IDEVersion":"2024.13.1.193",
+    "IDEVersion":"2024.14.1.210",
   },
   "name":"Cozy_Lang",
   "resources":[

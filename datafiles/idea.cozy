@@ -1,0 +1,13 @@
+import cozy.std;
+
+/// i'm just experimenting with ideas, this is kinda what i want you to be able to do in, don't mind this lolol
+
+public const class !MyMod : BaseMod
+{
+	public static property ID = "mymod";
+	
+	public static func Init() {
+		
+	}
+	
+}

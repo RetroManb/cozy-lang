@@ -46,6 +46,7 @@ const final class !Vec2 {
 	}
 	
 	constructor(x,y) {
+		print(this);
 		this.X = x;
 		this.Y = y;
 	}

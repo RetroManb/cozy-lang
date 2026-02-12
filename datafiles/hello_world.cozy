@@ -1,8 +1,8 @@
 import cozy.std;
 
-local a = 0;
+a = 5;
 local b = 5;
-if (a == b)
+if (a is b)
 {
 	print("Hello, World!");
 }
